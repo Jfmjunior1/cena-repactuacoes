@@ -3,4 +3,4 @@ node_modules/
 *.log
 
 # cópia local dos dados — não versionar (contém dados de locatários)
-src/dados-iniciais.js
+dados-iniciais.js
