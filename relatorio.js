@@ -267,6 +267,64 @@ const ESTILO_REL = paraExcel => `
    .tag.ok{background:#e8f2ec;border-color:#bcd9c9;color:#2f7d5b}
    .tag.at{background:#fbf0e2;border-color:#e8cfa9;color:#a5651f}
    .tag.no{background:#f2f0ee;border-color:#ddd6cd;color:#7f8b95}
+   /* ---------- capa executiva ---------- */
+   .capa{display:flex;gap:0;height:176mm;background:#fdfaf5;font-family:Arial,sans-serif;margin-bottom:14px}
+   .cside{width:50mm;flex:0 0 50mm;background:#1c3a52;color:#fff;padding:9mm 7mm;display:flex;flex-direction:column;position:relative;overflow:hidden}
+   .clogo{width:28mm;filter:brightness(0) invert(1);margin-bottom:8mm}
+   .cinfo .ci{border-top:1px solid rgba(255,255,255,.22);padding:3.6mm 0 0;margin-bottom:3.6mm}
+   .cinfo .ci span{display:block;font-size:8.4px;letter-spacing:.14em;text-transform:uppercase;color:#a8c0d2}
+   .cinfo .ci b{display:block;font-size:12.5px;font-weight:normal;margin-top:2px}
+   .cfoot{margin-top:auto;font-size:8.6px;color:#a8c0d2;line-height:1.7;position:relative;z-index:2}
+   .cart{position:absolute;left:0;bottom:-6mm;width:52mm;opacity:.28}
+   .cmain{flex:1;padding:9mm 9mm 6mm;display:flex;flex-direction:column;min-width:0}
+   .chead{display:flex;justify-content:space-between;align-items:flex-start;gap:8mm;margin-bottom:5mm}
+   .cov{font-size:9.4px;letter-spacing:.18em;text-transform:uppercase;color:#c0762c}
+   .ctit{font-size:31px;color:#1c3a52;margin:4px 0 0;font-weight:bold;letter-spacing:-.4px}
+   .crule{width:16mm;height:2px;background:#1c3a52;margin:4mm 0 3mm}
+   .csub{font-size:10.4px;color:#5b6772;margin:0;max-width:120mm;line-height:1.5}
+   .cbadge{border:1.5px solid #c0762c;border-radius:4px;padding:5mm 7mm;text-align:center;flex:0 0 auto}
+   .cbn{font-size:26px;color:#1c3a52;font-weight:bold;line-height:1}
+   .cbn span{font-size:14px;font-weight:normal}
+   .cbl{font-size:14px;color:#1c3a52;margin-top:1mm}
+   .cbf{font-size:7.8px;letter-spacing:.13em;text-transform:uppercase;color:#c0762c;margin-top:3mm}
+   .ckpi{display:flex;border:1px solid #dfe6ec;border-left:3px solid #c0762c;background:#fff;margin-bottom:4mm}
+   .ck{flex:1;padding:4mm 4mm;border-left:1px solid #eef2f5}
+   .ck:first-child{border-left:0}
+   .ck span{display:block;font-size:7.8px;letter-spacing:.11em;text-transform:uppercase;color:#7f8b95}
+   .ck b{display:block;font-size:15px;color:#1c3a52;margin-top:2mm}
+   .cgrid{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:4mm;flex:1;min-height:0}
+   .cbox{border:1px solid #dfe6ec;background:#fff;padding:3.5mm 4.5mm;display:flex;flex-direction:column;overflow:hidden;min-height:0}
+   .cbox h3{font-size:12.4px;color:#1c3a52;margin:0 0 3mm;font-weight:bold}
+   .cbox.cop h3{color:#a5651f}
+   .cflex{display:flex;align-items:center;gap:5mm}
+   .anel{width:26mm;height:26mm;flex:0 0 26mm}
+   .anelN{font-size:19px;font-weight:bold;fill:#1c3a52;font-family:Arial}
+   .anelS{font-size:9px;fill:#7f8b95;font-family:Arial}
+   .cop .anelN{fill:#c0762c}
+   .cmini{flex:1;border-collapse:collapse;font-size:9.6px}
+   .cmini td{padding:2.4mm 0;border-bottom:1px solid #eef2f5;color:#3d4a55}
+   .cmini td.r{text-align:right;white-space:nowrap}
+   .cmini td.cop{color:#c0762c}
+   .cmini tr.t td{font-weight:bold;color:#1c3a52;border-bottom:0;border-top:1px solid #dfe6ec}
+   .cmini i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px}
+   .ctab{width:100%;border-collapse:collapse;font-size:9.4px}
+   .ctab th{background:none;color:#7f8b95;border:0;border-bottom:1px solid #dfe6ec;padding:0 0 2mm;
+     font-size:7.6px;letter-spacing:.1em;text-transform:uppercase;text-align:left}
+   .ctab td{border:0;border-bottom:1px solid #f0f3f6;padding:2.6mm 0;background:#fff!important;color:#3d4a55}
+   .ctab .r{text-align:right}
+   .ctab tr.t td{background:#1c3a52!important;color:#fff;font-weight:bold;padding:2.6mm 2mm;border:0}
+   .cnota{font-size:8.6px;color:#7f8b95;line-height:1.55;margin:auto 0 0;padding-top:3mm;background:none;border:0}
+   .cnota.cbar{background:#fbf2e6;border-left:2px solid #c0762c;padding:2.5mm 3mm;color:#5b6772}
+   .cbars{display:flex;gap:2.5mm;align-items:flex-end;flex:1;min-height:0;padding-top:1mm}
+   .cb{flex:1;display:flex;flex-direction:column;align-items:center;height:100%}
+   .cbv{font-size:8px;color:#1c3a52;margin-bottom:1mm;white-space:nowrap}
+   .cbw{flex:1;width:100%;display:flex;align-items:flex-end;justify-content:center;min-height:0}
+   .cbw .col{width:60%;display:flex;flex-direction:column;justify-content:flex-end;min-height:2px}
+   .cbw i{display:block;width:100%;background:#1c3a52;min-height:1px}
+   .cbw i.d{background:#c0762c;border-radius:2px 2px 0 0}
+   .cbx{font-size:8.6px;color:#3d4a55;margin-top:1.5mm}
+   .cbq{font-size:7.6px;color:#a0a9b1}
+   .cbottom{margin-top:4mm;border-top:1px solid #dfe6ec;padding-top:3mm;font-size:8.4px;color:#7f8b95}
    /* moldura que se repete em toda página impressa: thead e tfoot são reimpressos pelo navegador */
    table.pg{width:100%;border-collapse:collapse;margin:0}
    table.pg>thead>tr>td,table.pg>tfoot>tr>td,table.pg>tbody>tr>td{border:0;padding:0;background:#fff!important}
@@ -290,6 +348,7 @@ const ESTILO_REL = paraExcel => `
      .phead img{height:12mm}
      .pfoot{margin-top:10px}
      .pfoot img{height:9mm}
+     .capa{page-break-after:always;height:176mm;margin:0}
      h2{page-break-after:avoid} h3{page-break-after:avoid}
      table{page-break-inside:auto} tr{page-break-inside:avoid}
      table.pg>tbody>tr{page-break-inside:auto}
@@ -338,6 +397,113 @@ function contratos(){
   }).sort((a,b)=>a.sig===b.sig?String(a.unidade).localeCompare(String(b.unidade),'pt-BR'):a.sig.localeCompare(b.sig));
 }
 
+/* ---------- capa executiva (página 1) ---------- */
+function anelSVG(pct, cor, fundo, texto, sub){
+  const r=52, circ=2*Math.PI*r, on=circ*Math.max(0,Math.min(1,pct));
+  return `<svg viewBox="0 0 130 130" class="anel">
+    <circle cx="65" cy="65" r="${r}" fill="none" stroke="${fundo}" stroke-width="15"/>
+    <circle cx="65" cy="65" r="${r}" fill="none" stroke="${cor}" stroke-width="15"
+      stroke-dasharray="${on.toFixed(1)} ${(circ-on).toFixed(1)}" stroke-linecap="butt"
+      transform="rotate(-90 65 65)"/>
+    <text x="65" y="63" text-anchor="middle" class="anelN">${texto}</text>
+    <text x="65" y="79" text-anchor="middle" class="anelS">${sub}</text></svg>`;
+}
+function capaHTML(d){
+  const maxImp = Math.max(1, ...d.anos.map(a=>a.atual + a.dif));
+  return `<section class="capa">
+  <aside class="cside">
+    <img class="clogo" src="${LOGO}" alt="Cena Empreendimentos">
+    <div class="cinfo">
+      <div class="ci"><span>Referência</span><b>${d.ref}</b></div>
+      <div class="ci"><span>Unidades</span><b>${d.unidades}</b></div>
+      <div class="ci"><span>Contratos</span><b>${d.contratos} contratos</b></div>
+      <div class="ci"><span>Empreendimentos</span><b>${d.emps}</b></div>
+    </div>
+    <div class="cfoot">Emitido em ${dbr(HOJE)}<br>Por ${esc(d.autor)}</div>
+    <svg class="cart" viewBox="0 0 200 150" fill="none" stroke="#7f9cb3" stroke-width="1.4">
+      <path d="M14 148V64l30-16 30 16v84M44 48V26M74 92h44v56M118 92l34-18 34 18v56M86 108h14M86 124h14"/>
+      <path d="M26 82h14M26 100h14M26 118h14M50 82h14M50 100h14M50 118h14M130 108h14M160 108h14M130 126h14M160 126h14"/>
+    </svg>
+  </aside>
+  <div class="cmain">
+    <header class="chead">
+      <div>
+        <div class="cov">Relatório mensal · Diretoria</div>
+        <h1 class="ctit">Locações e Repactuações</h1>
+        <div class="crule"></div>
+        <p class="csub">Visão executiva da carteira de locações: contratos, receita, área e andamento das repactuações.</p>
+      </div>
+      <div class="cbadge">
+        <div class="cbn">${d.feitas} <span>de ${d.plano}</span></div>
+        <div class="cbl">concluídas</div>
+        <div class="cbf">Plano anual de repactuações</div>
+      </div>
+    </header>
+
+    <div class="ckpi">
+      ${[['Receita mensal contratada','R$ '+brl(d.receita)],
+         ['Contratos ativos',d.contratos+' contratos'],
+         ['Área locada',brl(d.areaOc)+' m²'],
+         ['Unidades locadas',d.locadas+' unidades'],
+         ['Empreendimentos',d.emps+' empreend.']]
+        .map(([k,v])=>`<div class="ck"><span>${k}</span><b>${v}</b></div>`).join('')}
+    </div>
+
+    <div class="cgrid">
+      <div class="cbox">
+        <h3>Composição da carteira</h3>
+        <div class="cflex">
+          ${anelSVG(d.areaDet/(d.areaOc||1), '#1c3a52', '#c3d2dd', brl(d.areaOc), 'm² locados')}
+          <table class="cmini">
+            <tr><td><i style="background:#1c3a52"></i>Dentro do prazo</td><td class="r">${brl(d.areaDet)} m²</td><td class="r">${d.pctDet}</td></tr>
+            <tr><td><i style="background:#c3d2dd"></i>Prazo indeterminado</td><td class="r">${brl(d.areaInd)} m²</td><td class="r">${d.pctInd}</td></tr>
+            <tr class="t"><td>Total locado</td><td class="r">${brl(d.areaOc)} m²</td><td class="r">100,0%</td></tr>
+          </table>
+        </div>
+        <p class="cnota">Fora da carteira locada há ${d.vagas} unidade${d.vagas===1?'':'s'} vaga${d.vagas===1?'':'s'} ou em uso próprio, somando ${brl(d.areaVaga)} m².</p>
+      </div>
+
+      <div class="cbox cop">
+        <h3>Plano anual de repactuações</h3>
+        <div class="cflex">
+          ${anelSVG(d.feitas/(d.plano||1), '#c0762c', '#f2ddc2', d.pctPlano, 'concluído')}
+          <table class="cmini">
+            <tr><td>Concluídas</td><td class="r">${d.feitas} repactuações</td><td class="r">${d.pctPlano}</td></tr>
+            <tr><td>Em andamento</td><td class="r">${d.andamento} repactuações</td><td class="r cop">${d.pctAnd}</td></tr>
+            <tr><td>Pendentes</td><td class="r">${d.pend} repactuações</td><td class="r cop">${d.pctPend}</td></tr>
+          </table>
+        </div>
+        <p class="cnota cbar">Ganho já obtido <b>+R$ ${brl(d.ganho)}/mês</b> · ainda a obter <b>+R$ ${brl(d.aGanhar)}/mês</b></p>
+      </div>
+
+      <div class="cbox">
+        <h3>Situação da vigência</h3>
+        <table class="ctab">
+          <tr><th>Situação</th><th class="r">Contratos</th><th class="r">Área m²</th><th class="r">Receita</th><th class="r">%</th></tr>
+          <tr><td>Dentro do prazo de contrato</td><td class="r">${d.nDet}</td><td class="r">${brl(d.areaDet)}</td><td class="r">${brl(d.recDet)}</td><td class="r">${d.pctRecDet}</td></tr>
+          <tr><td>Prorrogado por prazo indeterminado</td><td class="r">${d.nInd}</td><td class="r">${brl(d.areaInd)}</td><td class="r">${brl(d.recInd)}</td><td class="r">${d.pctRecInd}</td></tr>
+          <tr class="t"><td>Total</td><td class="r">${d.contratos}</td><td class="r">${brl(d.areaOc)}</td><td class="r">${brl(d.receita)}</td><td class="r">100,0%</td></tr>
+        </table>
+        <p class="cnota">A receita contratada equivale a R$ ${brl(d.receita*12)} ao ano.</p>
+      </div>
+
+      <div class="cbox">
+        <h3>Impacto das repactuações por ano</h3>
+        <div class="cbars">
+          ${d.anos.map(a=>`<div class="cb">
+             <div class="cbv">${brl((a.atual+a.dif)/1000)} mil</div>
+             <div class="cbw"><div class="col" style="height:${(((a.atual+a.dif)/maxImp)*100).toFixed(1)}%">
+               ${a.dif?`<i class="d" style="flex:${a.dif.toFixed(0)}"></i>`:''}
+               <i style="flex:${Math.max(1,a.atual).toFixed(0)}"></i></div></div>
+             <div class="cbx">${a.ano}</div>
+             <div class="cbq">${a.n} contrato${a.n===1?'':'s'}</div></div>`).join('')}
+        </div>
+        <p class="cnota">Barra escura: receita mensal dos contratos que vencem ciclo no ano. Barra cobre: ganho previsto, presente apenas onde o Comercial já definiu meta.</p>
+      </div>
+    </div>
+  </div></section>`;
+}
+
 function docMensal(){
   const C=contratos();
   const oc=C.filter(c=>c.ocupada);
@@ -352,6 +518,24 @@ function docMensal(){
   const futuros=ANOS.filter(a=>a>ANO_C);
   const sigs=[...new Set(C.map(c=>c.sig))].sort((a,b)=>soma(C.filter(c=>c.sig===b),c=>c.valor)-soma(C.filter(c=>c.sig===a),c=>c.valor));
   const pc=n=>rec?(n/rec*100).toFixed(1).replace('.',',')+'%':'—';
+  const pctA=(x,t)=>t?(x/t*100).toFixed(1).replace('.',',')+'%':'—';
+  const andN=doAnoC.filter(emAndamento).length;
+  const capa=capaHTML({
+    ref: mesExt(HOJE), autor: DB.usuario?DB.usuario.nome:'painel interno',
+    unidades: C.length, contratos: oc.length, locadas: oc.length, emps: sigs.length,
+    receita: rec, areaOc: areaOc, areaVaga: area-areaOc, vagas: vagas.length,
+    areaDet: soma(det,c=>c.m2), areaInd: soma(ind,c=>c.m2),
+    pctDet: pctA(soma(det,c=>c.m2), areaOc), pctInd: pctA(soma(ind,c=>c.m2), areaOc),
+    nDet: det.length, nInd: ind.length,
+    recDet: soma(det,c=>c.valor), recInd: soma(ind,c=>c.valor),
+    pctRecDet: pc(soma(det,c=>c.valor)), pctRecInd: pc(soma(ind,c=>c.valor)),
+    plano: doAnoC.length, feitas: fe.length, andamento: andN, pend: pe.length-andN,
+    pctPlano: pctA(fe.length, doAnoC.length), pctAnd: pctA(andN, doAnoC.length),
+    pctPend: pctA(pe.length-andN, doAnoC.length),
+    ganho: ganho, aGanhar: aGanhar,
+    anos: ANOS.map(a=>{const S=IT.filter(i=>i.ano===a);
+      return {ano:a, n:S.length, atual:soma(S,i=>i.valor), dif:Math.max(0, soma(S,prev)-soma(S,i=>i.valor))};})
+  });
 
   /* Mesmas colunas do "Relatório de Locação Grupo Cena", com vigência e situação ao final. */
   const gar=c=>{const g=String(c.gar||'').trim();
@@ -369,23 +553,9 @@ function docMensal(){
      <td><span class="tag ${c.classe}">${esc(c.situacao)}</span></td></tr>`).join('');
 
   const s=`
-   <h2>1. Panorama da carteira</h2>
-   <table class="kpi"><tr>
-     <td><span>Contratos de locação</span><b>${oc.length}</b></td>
-     <td><span>Receita mensal</span><b>R$ ${brl(rec)}</b></td>
-     <td><span>Área locada</span><b>${brl(areaOc)} m²</b></td>
-     <td><span>R$/m² médio</span><b>R$ ${areaOc?br2(rec/areaOc):'—'}</b></td>
-     <td><span>Unidades vagas / uso próprio</span><b>${vagas.length}</b></td>
-     <td><span>Empreendimentos</span><b>${sigs.length}</b></td>
-   </tr></table>
-   <p class="sub">A carteira reúne <b>${C.length} unidades</b> em ${sigs.length} empreendimentos, das quais ${oc.length} estão locadas e ${vagas.length} figuram como vagas ou em uso próprio. A receita contratada soma <b>R$ ${brl(rec)} por mês</b>, o equivalente a R$ ${brl(rec*12)} ao ano.</p>
-
-   <h2>2. Situação da vigência</h2>
-   <table><tr><th>Situação</th><th class="r">Contratos</th><th class="r">Área m²</th><th class="r">Receita mensal</th><th class="r">% da receita</th></tr>
-     <tr><td>Dentro do prazo de contrato</td><td class="r">${det.length}</td><td class="r">${brl(soma(det,c=>c.m2))}</td><td class="r">R$ ${brl(soma(det,c=>c.valor))}</td><td class="r">${pc(soma(det,c=>c.valor))}</td></tr>
-     <tr><td>Prorrogado por prazo indeterminado</td><td class="r">${ind.length}</td><td class="r">${brl(soma(ind,c=>c.m2))}</td><td class="r">R$ ${brl(soma(ind,c=>c.valor))}</td><td class="r">${pc(soma(ind,c=>c.valor))}</td></tr>
-     <tr class="tot"><td>Total locado</td><td class="r">${oc.length}</td><td class="r">${brl(areaOc)}</td><td class="r">R$ ${brl(rec)}</td><td class="r">100%</td></tr></table>
-   <h3>Contratos por prazo indeterminado <span class="lt">· ${ind.length} contrato${ind.length>1?'s':''} · R$ ${brl(soma(ind,c=>c.valor))}/mês</span></h3>
+   <h2>1. Contratos por prazo indeterminado</h2>
+   <p class="sub">Locações cuja vigência original venceu e seguem válidas por prazo indeterminado. Somam ${ind.length} contratos e ${pc(soma(ind,c=>c.valor))} da receita.</p>
+   <h3 style="margin-top:0">Relação completa <span class="lt">· R$ ${brl(soma(ind,c=>c.valor))}/mês</span></h3>
    <table><tr><th>Empreendimento</th><th>Cliente</th><th>Unidade</th><th class="r">Área m²</th><th class="r">Valor mensal</th><th class="r">Fim do prazo original</th><th class="r">Próxima repactuação</th></tr>
      ${ind.map(c=>`<tr><td>${esc(EMPN[c.sig]||c.sig)}</td><td>${esc(c.cliente)}</td><td>${esc(curto(c.unidade,44))}</td>
        <td class="r">${c.m2?br2(c.m2):'—'}</td><td class="r">${c.valor?'R$ '+brl(c.valor):'a confirmar'}</td>
@@ -393,7 +563,7 @@ function docMensal(){
      <tr class="tot"><td colspan="3">Subtotal</td><td class="r">${brl(soma(ind,c=>c.m2))}</td><td class="r">R$ ${brl(soma(ind,c=>c.valor))}</td><td colspan="2"></td></tr></table>
    <p class="obs">A locação por prazo indeterminado permanece válida e regida pelo contrato original (Lei 8.245/91), mas pode ser denunciada por qualquer das partes com aviso prévio. São ${ind.length} contratos nessa condição, ${pc(soma(ind,c=>c.valor))} da receita — recomenda-se avaliar a renovação formal junto com a repactuação.</p>
 
-   <h2 class="qbr">3. Repactuações de ${ANO_C}</h2>
+   <h2 class="qbr">2. Repactuações de ${ANO_C}</h2>
    <table class="kpi"><tr>
      <td><span>Planejadas no ano</span><b>${doAnoC.length}</b></td>
      <td><span>Concluídas</span><b>${fe.length}</b></td>
@@ -412,7 +582,7 @@ function docMensal(){
      <tr class="tot"><td colspan="4">Total do ano</td><td class="r">R$ ${brl(soma(doAnoC,i=>i.valor))}</td>
        <td class="r">R$ ${brl(soma(doAnoC,prev))}</td><td class="r">+R$ ${brl(soma(doAnoC,dif))}</td><td colspan="2"></td></tr></table>
 
-   <h2>4. Tratativas em andamento</h2>
+   <h2>3. Tratativas em andamento</h2>
    ${emAnd.length?`<table><tr><th>Cliente</th><th>Local</th><th>Unidade</th><th>Etapa</th><th>Responsável</th><th class="r">Próximo contato</th><th class="r">Valor atual</th><th class="r">Pretendido</th></tr>
      ${emAnd.map(i=>`<tr><td>${esc(i.cliente)}</td><td>${i.sig}</td><td>${esc(curto(i.unidade,44))}</td>
        <td><span class="tag at">${esc(wf(i))}</span></td><td>${esc(ac(i.id).resp||'—')}</td>
@@ -420,7 +590,7 @@ function docMensal(){
        <td class="r">R$ ${brl(i.valor)}</td><td class="r">R$ ${brl(prev(i))}</td></tr>`).join('')}</table>`
     :'<p class="obs">Nenhuma tratativa em andamento nesta data. As demais repactuações do ano ainda não atingiram o prazo de abertura de negociação.</p>'}
 
-   <h2>5. Calendário de repactuações ${futuros.length?futuros[0]+' a '+futuros[futuros.length-1]:''}</h2>
+   <h2>4. Calendário de repactuações ${futuros.length?futuros[0]+' a '+futuros[futuros.length-1]:''}</h2>
    <table><tr><th>Ano</th><th class="r">Contratos</th><th class="r">Área m²</th><th class="r">Valor atual</th><th class="r">Valor previsto</th><th class="r">Diferença mensal</th><th class="r">Impacto anual</th></tr>
      ${futuros.map(a=>{const S=IT.filter(i=>i.ano===a),x=soma(S,i=>i.valor),y=soma(S,prev);
        return `<tr><td>${a}</td><td class="r">${S.length}</td><td class="r">${brl(soma(S,i=>i.m2))}</td>
@@ -428,7 +598,7 @@ function docMensal(){
          <td class="r">+R$ ${brl((y-x)*12)}</td></tr>`;}).join('')}</table>
    <p class="obs">O valor previsto só incorpora meta de R$/m² onde o Comercial já a definiu — hoje, apenas no plano de ${ANO_C}. Nos anos seguintes o previsto repete o valor atual, de modo que os números acima são o piso, não a expectativa de ganho.</p>
 
-   <h2 class="qbr">6. Listagem de locatários e situação de cada contrato</h2>
+   <h2 class="qbr">5. Listagem de locatários e situação de cada contrato</h2>
    <p class="sub">Todas as ${C.length} unidades da carteira, agrupadas por empreendimento. Inclui as unidades vagas e as de uso próprio, sinalizadas na coluna de situação.</p>
    ${sigs.map(sg=>{const S=C.filter(c=>c.sig===sg), sv=soma(S,c=>c.valor), sm=soma(S,c=>c.m2);
      return `<div class="band" style="background:${cor(sg)}">${esc(EMPN[sg]||sg)}<span>${sg} · ${S.length} unidade${S.length>1?'s':''}</span></div>
@@ -442,7 +612,7 @@ function docMensal(){
    <table><tr class="tot"><td>Total geral · ${C.length} unidades · ${oc.length} locadas</td><td class="r">${br2(area)} m²</td>
      <td class="r">R$ ${br2(rec)}/mês</td><td class="r">R$ ${areaOc?br2(rec/areaOc):'—'}/m²</td><td class="r">R$ ${brl(rec*12)}/ano</td></tr></table>
 
-   <h2>7. Nota metodológica</h2>
+   <h2>6. Nota metodológica</h2>
    <p class="obs"><b>Regra de repactuação:</b> a cada três anos, contada da última ou da próxima renegociação registrada no controle de locações, projetada até o fim da vigência. Contratos prorrogados por prazo indeterminado tiveram dois ciclos projetados.<br><br>
    <b>Valor previsto:</b> o valor efetivamente repactuado quando a negociação já foi fechada; o valor simulado no painel quando houver; o valor alvo do Comercial quando definido; na falta de todos, repete o valor atual.<br><br>
    <b>Fonte:</b> planilha “Controle Contratos de Locação 2023 / 2024 / 2025 e 2026”, aba “Consolidado - Imóveis”, e plano de repactuação de ${ANO_C}. Posição em ${dbr(HOJE)}. Minutas e aditivos no SharePoint; tratativas registradas no ClickUp.<br><br>
@@ -452,6 +622,7 @@ function docMensal(){
 
   return `<html><head><meta charset="utf-8"><title>Locações e Repactuações — ${mesExt(HOJE)} — Cena Empreendimentos</title>
   <style>${ESTILO_REL(false)}</style></head><body>
+  ${capa}
   ${moldura(`<div class="cab">
     <div><div class="ov">Relatório mensal · Diretoria</div>
       <h1>Locações e Repactuações</h1>
