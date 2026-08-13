@@ -47,6 +47,8 @@ function faixaEmp(l){
 }
 
 function lerPlanilha(buf){
+  if(typeof XLSX==='undefined')
+    throw new Error('O leitor de planilhas não carregou. Atualize a página (Ctrl+F5) e tente de novo.');
   const wb = XLSX.read(buf, {type:'array', cellDates:true});
   const aba = wb.Sheets['Consolidado - Imóveis'];
   if(!aba) throw new Error('A aba “Consolidado - Imóveis” não foi encontrada neste arquivo.');
