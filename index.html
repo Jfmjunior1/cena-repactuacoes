@@ -279,7 +279,12 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
 .fset{margin-bottom:20px}
 .fset h5{font-family:var(--fm);font-size:9.4px;letter-spacing:.15em;text-transform:uppercase;color:var(--copper);
  margin:0 0 10px;display:flex;align-items:center;gap:10px}
-.fset h5::after{content:'';flex:1;height:1px;background:var(--line-2)}
+.fset h5::after{content:'';flex:1;height:1px;background:var(--line-2);order:3}
+.lnk{order:2;font-family:var(--fm);font-size:9.4px;letter-spacing:.12em;text-transform:uppercase;color:var(--navy);
+ background:none;border:0;border-bottom:1px solid var(--line-2);padding:0 0 1px;cursor:pointer;transition:.16s}
+.lnk:hover{color:var(--copper);border-color:var(--copper)}
+.sumline{font-family:var(--fb);font-size:12.4px;color:var(--muted);margin:-2px 0 0;line-height:1.55}
+.sumline+.opts{margin-top:11px}
 .opts{display:flex;gap:7px;flex-wrap:wrap}
 .op{font-family:var(--fb);font-size:12px;padding:8px 13px;border-radius:8px;cursor:pointer;border:1px solid var(--line-2);
  background:#fff;color:var(--navy);transition:.16s}
@@ -431,7 +436,8 @@ footer b{color:var(--navy)}
       <div class="hdrr">
         <img class="brandlogo" src="logo.png" alt="Cena Empreendimentos">
         <div class="sessao sess"></div>
-        <div class="row"><button class="b cop" id="bRelGeral">Gerar relatório</button></div></div>
+        <div class="row"><button class="b cop" id="bMensal" title="PDF padrão da Diretoria: carteira completa, vigências, repactuações do ano e listagem de todos os locatários">Relatório mensal</button>
+          <button class="b" id="bRelGeral" title="Escolher formato, anos, empreendimentos e colunas">Personalizado</button></div></div>
     </div>
     <div id="homeTop">
     <div class="nums" id="numsGeral"></div>
