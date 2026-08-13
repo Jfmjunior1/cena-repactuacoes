@@ -80,7 +80,7 @@ declare
   r         jsonb;
   v_id      text;
   v_ant     public.contratos%rowtype;
-  c         public.contratos%rowtype;
+  ct        public.contratos%rowtype;
   v_base    date;
   v_data    date;
   v_indet   boolean;
@@ -184,13 +184,13 @@ begin
   get diagnostics v_ajs = row_count;
 
   -- ===== projeta os ciclos de três anos que ainda não existem =====
-  for c in select * from public.contratos where ativo = true loop
-    if c.proxima_reneg is not null then
-      v_base := c.proxima_reneg;  v_origem := 'Próxima renegociação da planilha';
-    elsif c.ultima_reneg is not null then
-      v_base := c.ultima_reneg + interval '3 years'; v_origem := 'Última renegociação + 3 anos';
-    elsif c.inicio is not null then
-      v_base := c.inicio + interval '3 years'; v_origem := 'Início do contrato + 3 anos';
+  for ct in select * from public.contratos where ativo = true loop
+    if ct.proxima_reneg is not null then
+      v_base := ct.proxima_reneg;  v_origem := 'Próxima renegociação da planilha';
+    elsif ct.ultima_reneg is not null then
+      v_base := ct.ultima_reneg + interval '3 years'; v_origem := 'Última renegociação + 3 anos';
+    elsif ct.inicio is not null then
+      v_base := ct.inicio + interval '3 years'; v_origem := 'Início do contrato + 3 anos';
     else
       continue;
     end if;
@@ -199,27 +199,27 @@ begin
       v_base := v_base + interval '3 years';
     end loop;
 
-    v_indet := c.fim is null or c.fim < current_date;
+    v_indet := ct.fim is null or ct.fim < current_date;
     v_max   := case when v_indet then 2 else 12 end;
     v_data  := v_base;
     v_n     := 0;
 
-    while v_n < v_max and (v_indet or v_data <= c.fim) loop
-      v_rid := c.id || '|' || to_char(v_data,'YYYY-MM-DD');
+    while v_n < v_max and (v_indet or v_data <= ct.fim) loop
+      v_rid := ct.id || '|' || to_char(v_data,'YYYY-MM-DD');
       if not exists (select 1 from public.repactuacoes where id = v_rid) then
         insert into public.repactuacoes (
           id, ano, data, sigla, cliente, unidade, garagem, m2, valor,
           status, prazo, inicio, fim, ult_repactuacao, origem, locador,
           administracao, rm2_controle, situacao_contrato, sem_previsao, fonte)
         values (
-          v_rid, extract(year from v_data)::int, v_data, c.sigla, c.cliente,
-          c.unidade, c.garagem, c.m2, c.valor, 'Previsto',
+          v_rid, extract(year from v_data)::int, v_data, ct.sigla, ct.cliente,
+          ct.unidade, ct.garagem, ct.m2, ct.valor, 'Previsto',
           case when v_indet then 'Indet.'
-               else lower(to_char(c.fim,'TMmon')) || '/' || to_char(c.fim,'YY') end,
-          c.inicio, c.fim, c.historico, v_origem, c.locador, c.administracao,
-          c.rm2_controle, c.situacao, false, 'planilha');
+               else lower(to_char(ct.fim,'TMmon')) || '/' || to_char(ct.fim,'YY') end,
+          ct.inicio, ct.fim, ct.historico, v_origem, ct.locador, ct.administracao,
+          ct.rm2_controle, ct.situacao, false, 'planilha');
         v_cri := v_cri + 1;
-        v_mud := v_mud || jsonb_build_object('tipo','ciclo_novo','contrato',c.id,'data',v_data);
+        v_mud := v_mud || jsonb_build_object('tipo','ciclo_novo','contrato',ct.id,'data',v_data);
       end if;
       v_data := v_data + interval '3 years';
       v_n := v_n + 1;
