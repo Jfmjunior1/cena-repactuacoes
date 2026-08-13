@@ -1,5 +1,14 @@
 /* ================== GERADOR DE RELATÓRIO ================== */
 const LOGO = new URL('logo.png', location.href).href;
+const RODAPE = new URL('rodape.png', location.href).href;
+/* Faixas repetidas em toda página impressa: logo no alto à direita, assinatura no rodapé à direita. */
+const FAIXA_TOPO = `<div class="phead"><img src="${LOGO}" alt="Cena Empreendimentos"></div>`;
+const FAIXA_PE = `<div class="pfoot"><span>Documento interno de uso restrito · dados de locatários protegidos pela LGPD · não distribuir a terceiros.</span><img src="${RODAPE}" alt="Cena Empreendimentos · Av. Osvaldo Rodrigues Cabral, 1570, sala 213 · Centro Empresarial Florianópolis"></div>`;
+/* O conteúdo vai dentro do tbody; thead e tfoot são repetidos pelo navegador em cada página. */
+const moldura = conteudo => `<table class="pg">
+  <thead><tr><td>${FAIXA_TOPO}</td></tr></thead>
+  <tfoot><tr><td>${FAIXA_PE}</td></tr></tfoot>
+  <tbody><tr><td>${conteudo}</td></tr></tbody></table>`;
 
 const RCOLS=[
  {id:'data',t:'Data da repactuação',v:i=>dbr(i.data)},
@@ -219,15 +228,12 @@ function docHTML(paraExcel){
 
   return `<html><head><meta charset="utf-8"><title>Repactuações de locação — Cena Empreendimentos</title>
   <style>${estilo}</style></head><body>
-  <div class="cab">
-    <div><img src="${LOGO}" alt="Cena Empreendimentos">
-      <div class="ov" style="margin-top:10px">Relatório interno · Gestão de locações</div>
+  ${moldura(`<div class="cab">
+    <div><div class="ov">Relatório interno · Gestão de locações</div>
       <h1>Planejamento de repactuações</h1>
       <div class="s">${esc(recorte)}</div></div>
     <div class="dt">Posição em ${dbr(HOJE)}<br>${L.length} contrato${L.length>1?'s':''} no recorte<br>Emitido por ${esc(DB.usuario?DB.usuario.nome:'painel interno')}</div>
-  </div>
-  ${s}
-  <div class="rod">Cena Empreendimentos · Du Lac · Florianópolis/SC · documento interno, uso restrito · dados protegidos pela LGPD.</div>
+  </div>${s}`)}
   </body></html>`;
 }
 
@@ -261,7 +267,33 @@ const ESTILO_REL = paraExcel => `
    .tag.ok{background:#e8f2ec;border-color:#bcd9c9;color:#2f7d5b}
    .tag.at{background:#fbf0e2;border-color:#e8cfa9;color:#a5651f}
    .tag.no{background:#f2f0ee;border-color:#ddd6cd;color:#7f8b95}
-   @media print{@page{size:A4 landscape;margin:12mm} h2{page-break-after:avoid} h3{page-break-after:avoid} table{page-break-inside:auto} tr{page-break-inside:avoid} .qbr{page-break-before:always}}`;
+   /* moldura que se repete em toda página impressa: thead e tfoot são reimpressos pelo navegador */
+   table.pg{width:100%;border-collapse:collapse;margin:0}
+   table.pg>thead>tr>td,table.pg>tfoot>tr>td,table.pg>tbody>tr>td{border:0;padding:0;background:#fff!important}
+   .band{font-family:Arial,sans-serif;font-size:11.6px;font-weight:bold;color:#fff;letter-spacing:.04em;
+     padding:7px 11px;margin:18px 0 0;display:flex;justify-content:space-between;align-items:baseline;gap:16px}
+   .band span{font-weight:normal;font-size:9.4px;letter-spacing:.08em;text-transform:uppercase;opacity:.82}
+   .phead{display:flex;justify-content:flex-end;align-items:center;padding-bottom:9px}
+   .phead img{height:40px}
+   .pfoot{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;
+     border-top:1px solid #e4dccf;padding-top:9px;margin-top:22px}
+   .pfoot span{font-family:Arial,sans-serif;font-size:8.8px;color:#7f8b95;line-height:1.6;max-width:520px}
+   .pfoot img{height:26px;width:auto}
+   table.loc{table-layout:fixed;font-size:9.4px}
+   table.loc td{word-break:break-word}
+   table.loc th{font-size:8.2px;padding:5px 5px;white-space:normal;line-height:1.3}
+   table.loc th.r{white-space:normal}
+   table.loc td{padding:4px 5px}
+   @media print{
+     @page{size:A4 landscape;margin:11mm 12mm 9mm}
+     body{max-width:none;margin:0;padding:0}
+     .phead img{height:12mm}
+     .pfoot{margin-top:10px}
+     .pfoot img{height:9mm}
+     h2{page-break-after:avoid} h3{page-break-after:avoid}
+     table{page-break-inside:auto} tr{page-break-inside:avoid}
+     table.pg>tbody>tr{page-break-inside:auto}
+     .qbr{page-break-before:always}}`;
 
 /* ================== RELATÓRIO MENSAL DA DIRETORIA ==================
    Formato fixo, definido a partir do pedido da Diretoria (e-mail de 28/07/2026):
@@ -300,7 +332,7 @@ function contratos(){
       proxAno: pend.length?pend[0].ano:null,
       andamento: pend.some(emAndamento),
       ocupada: !vago&&!proprio,
-      situacao: proprio?'Uso próprio':(vago?'Unidade vaga':(junto?'Locado · valor a confirmar':(pend.length?'Locado':'Locado · sem previsão'))),
+      situacao: proprio?'Uso próprio':(vago?'Unidade vaga':(junto?'A confirmar':(pend.length?'Locado':'Sem previsão'))),
       classe: (proprio||vago)?'no':(junto?'at':'ok')
     };
   }).sort((a,b)=>a.sig===b.sig?String(a.unidade).localeCompare(String(b.unidade),'pt-BR'):a.sig.localeCompare(b.sig));
@@ -321,16 +353,19 @@ function docMensal(){
   const sigs=[...new Set(C.map(c=>c.sig))].sort((a,b)=>soma(C.filter(c=>c.sig===b),c=>c.valor)-soma(C.filter(c=>c.sig===a),c=>c.valor));
   const pc=n=>rec?(n/rec*100).toFixed(1).replace('.',',')+'%':'—';
 
+  /* Mesmas colunas do "Relatório de Locação Grupo Cena", com vigência e situação ao final. */
+  const gar=c=>{const g=String(c.gar||'').trim();
+    return (!g||g==='-'||g===String(c.unidade).trim())?'':curto(g,40);};
   const linhas=L=>L.map(c=>`<tr>
-     <td>${esc(c.cliente)}</td><td>${esc(curto(c.unidade))}</td>
+     <td>${esc(c.cliente)}</td><td>${esc(curto(c.unidade,40))}</td><td>${esc(gar(c))||'—'}</td>
+     <td class="r">${c.valor?'R$ '+br2(c.valor):'—'}</td>
      <td class="r">${c.m2?br2(c.m2):'—'}</td>
-     <td class="r">${c.valor?'R$ '+brl(c.valor):'—'}</td>
      <td class="r">${c.valor&&c.m2?'R$ '+br2(c.valor/c.m2):'—'}</td>
      <td class="r">${dbr(c.ini)}</td>
-     <td class="r">${c.indet?'—':dbr(c.fim)}</td>
-     <td><span class="tag ${c.indet?'at':'ok'}">${c.indet?'Indeterminado':'Prazo de contrato'}</span></td>
+     <td class="r">${c.fim?dbr(c.fim):'—'}</td>
      <td class="r">${c.ultRep?dbr(c.ultRep):'—'}</td>
      <td class="r">${c.proxRep?dbr(c.proxRep):'—'}</td>
+     <td><span class="tag ${c.indet?'at':'ok'}">${c.indet?'Indet.':'Em prazo'}</span></td>
      <td><span class="tag ${c.classe}">${esc(c.situacao)}</span></td></tr>`).join('');
 
   const s=`
@@ -395,13 +430,17 @@ function docMensal(){
 
    <h2 class="qbr">6. Listagem de locatários e situação de cada contrato</h2>
    <p class="sub">Todas as ${C.length} unidades da carteira, agrupadas por empreendimento. Inclui as unidades vagas e as de uso próprio, sinalizadas na coluna de situação.</p>
-   ${sigs.map(sg=>{const S=C.filter(c=>c.sig===sg);
-     return `<h3>${esc(EMPN[sg]||sg)} <span class="lt">· ${sg} · ${S.length} unidade${S.length>1?'s':''} · R$ ${brl(soma(S,c=>c.valor))}/mês</span></h3>
-      <table><tr><th>Cliente / locatário</th><th>Unidade</th><th class="r">Área m²</th><th class="r">Valor mensal</th><th class="r">R$/m²</th>
-        <th class="r">Início</th><th class="r">Fim</th><th>Vigência</th><th class="r">Última repact.</th><th class="r">Próxima repact.</th><th>Situação</th></tr>
+   ${sigs.map(sg=>{const S=C.filter(c=>c.sig===sg), sv=soma(S,c=>c.valor), sm=soma(S,c=>c.m2);
+     return `<div class="band" style="background:${cor(sg)}">${esc(EMPN[sg]||sg)}<span>${sg} · ${S.length} unidade${S.length>1?'s':''}</span></div>
+      <table class="loc"><colgroup><col style="width:14%"><col style="width:10%"><col style="width:8%"><col style="width:8%"><col style="width:6%"><col style="width:7%">
+        <col style="width:7%"><col style="width:7%"><col style="width:8%"><col style="width:8%"><col style="width:6%"><col style="width:8%"></colgroup>
+      <tr><th>Cliente</th><th>Unidade</th><th>Garagem</th><th class="r">Valor contrato</th><th class="r">M² priv. sala</th><th class="r">Valor do m² locação</th>
+        <th class="r">Início do contrato</th><th class="r">Fim do contrato</th><th class="r">Última renegociação</th><th class="r">Próxima renegociação</th><th>Vigência</th><th>Situação</th></tr>
       ${linhas(S)}
-      <tr class="tot"><td colspan="2">Subtotal</td><td class="r">${brl(soma(S,c=>c.m2))}</td><td class="r">R$ ${brl(soma(S,c=>c.valor))}</td><td colspan="7"></td></tr></table>`;}).join('')}
-   <table><tr class="tot"><td>Total geral · ${C.length} unidades</td><td class="r">${brl(area)} m²</td><td class="r">R$ ${brl(rec)}/mês</td><td class="r">R$ ${brl(rec*12)}/ano</td></tr></table>
+      <tr class="tot"><td colspan="3">Total dos contratos</td><td class="r">${sv?'R$ '+br2(sv):'—'}</td><td class="r">${br2(sm)}</td>
+        <td class="r">${sv&&sm?'R$ '+br2(sv/sm):'—'}</td><td colspan="6"></td></tr></table>`;}).join('')}
+   <table><tr class="tot"><td>Total geral · ${C.length} unidades · ${oc.length} locadas</td><td class="r">${br2(area)} m²</td>
+     <td class="r">R$ ${br2(rec)}/mês</td><td class="r">R$ ${areaOc?br2(rec/areaOc):'—'}/m²</td><td class="r">R$ ${brl(rec*12)}/ano</td></tr></table>
 
    <h2>7. Nota metodológica</h2>
    <p class="obs"><b>Regra de repactuação:</b> a cada três anos, contada da última ou da próxima renegociação registrada no controle de locações, projetada até o fim da vigência. Contratos prorrogados por prazo indeterminado tiveram dois ciclos projetados.<br><br>
@@ -413,16 +452,14 @@ function docMensal(){
 
   return `<html><head><meta charset="utf-8"><title>Locações e Repactuações — ${mesExt(HOJE)} — Cena Empreendimentos</title>
   <style>${ESTILO_REL(false)}</style></head><body>
-  <div class="cab">
-    <div><img src="${LOGO}" alt="Cena Empreendimentos">
-      <div class="ov" style="margin-top:10px">Relatório mensal · Diretoria</div>
+  ${moldura(`<div class="cab">
+    <div><div class="ov">Relatório mensal · Diretoria</div>
       <h1>Locações e Repactuações</h1>
       <div class="s">Referência: ${mesExt(HOJE)} · carteira completa, vigências e cronograma de repactuação</div></div>
     <div class="dt">Posição em ${dbr(HOJE)}<br>${C.length} unidades · ${oc.length} locadas<br>Emitido por ${esc(DB.usuario?DB.usuario.nome:'painel interno')}</div>
   </div>
   <div class="cap"><b>Receita mensal R$ ${brl(rec)}</b><b>${det.length} em prazo de contrato</b><b>${ind.length} por prazo indeterminado</b><b>${fe.length} de ${doAnoC.length} repactuações de ${ANO_C} concluídas</b></div>
-  ${s}
-  <div class="rod">Cena Empreendimentos · Du Lac · Av. Osvaldo Rodrigues Cabral, 1570, sala 213 · Florianópolis/SC<br>Documento interno de uso restrito · dados de locatários protegidos pela LGPD · emitido pelo Painel de Repactuações.</div>
+  ${s}`)}
   </body></html>`;
 }
 
