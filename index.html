@@ -285,6 +285,11 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
 .lnk:hover{color:var(--copper);border-color:var(--copper)}
 .sumline{font-family:var(--fb);font-size:12.4px;color:var(--muted);margin:-2px 0 0;line-height:1.55}
 .sumline+.opts{margin-top:11px}
+table.imp{width:100%;border-collapse:collapse;font-family:var(--fb);font-size:12.2px;margin-top:11px}
+table.imp th{background:var(--navy);color:#fff;text-align:left;padding:6px 8px;font-family:var(--fm);font-size:9px;letter-spacing:.08em;text-transform:uppercase}
+table.imp td{padding:5px 8px;border-bottom:1px solid var(--line)}
+table.imp td.r,table.imp th.r{text-align:right;white-space:nowrap}
+#impFile{font-family:var(--fb);font-size:12.6px}
 .opts{display:flex;gap:7px;flex-wrap:wrap}
 .op{font-family:var(--fb);font-size:12px;padding:8px 13px;border-radius:8px;cursor:pointer;border:1px solid var(--line-2);
  background:#fff;color:var(--navy);transition:.16s}
@@ -437,7 +442,8 @@ footer b{color:var(--navy)}
         <img class="brandlogo" src="logo.png" alt="Cena Empreendimentos">
         <div class="sessao sess"></div>
         <div class="row"><button class="b cop" id="bMensal" title="PDF padrão da Diretoria: carteira completa, vigências, repactuações do ano e listagem de todos os locatários">Relatório mensal</button>
-          <button class="b" id="bRelGeral" title="Escolher formato, anos, empreendimentos e colunas">Personalizado</button></div></div>
+          <button class="b" id="bRelGeral" title="Escolher formato, anos, empreendimentos e colunas">Personalizado</button>
+          <button class="b" id="bImport" title="Ler a planilha do Financeiro e atualizar os contratos">Atualizar da planilha</button></div></div>
     </div>
     <div id="homeTop">
     <div class="nums" id="numsGeral"></div>
@@ -517,6 +523,17 @@ footer b{color:var(--navy)}
       Metas de R$/m² são premissa a validar com o Comercial.</div>
   </footer>
 </div>
+<div class="modal" id="mimp"><div class="mbox">
+  <div class="mhead">
+    <img class="mlogo" src="logo.png" alt="Cena">
+    <div><h3>Atualizar a partir da planilha</h3>
+      <p>Compare o controle do Financeiro com o painel e grave as diferenças.</p></div>
+    <button class="mx" id="impClose">&times;</button>
+  </div>
+  <div class="mbody" id="impBody"></div>
+  <div class="mfoot"><div class="res" id="impRes">Nada é apagado: contratos ausentes ficam marcados para revisão, e simulações, etapas e anotações são preservadas.</div>
+    <div class="row"><button class="b" id="impCancel">Cancelar</button><button class="b cop" id="impGo">Aplicar no banco</button></div></div>
+</div></div>
 <div class="modal" id="mrel"><div class="mbox">
   <div class="mhead"><div style="display:flex;align-items:center;gap:16px">
       <img id="mlogo" src="logo.png" alt="Cena Empreendimentos">
@@ -532,6 +549,8 @@ footer b{color:var(--navy)}
 <script src="config.js"></script>
 <script src="db.js"></script>
 <script src="app.js"></script>
+<script src="xlsx.local.js"></script>
 <script src="relatorio.js"></script>
+<script src="importar.js"></script>
 </body>
 </html>

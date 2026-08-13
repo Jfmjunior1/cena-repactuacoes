@@ -147,6 +147,12 @@ const DB = (() => {
     return error ? { ok:false, motivo:error.message } : { ok:true };
   }
 
+  async function rpc(nome, args){
+    if(!online) return { ok:false, motivo:'painel em modo local' };
+    const { data, error } = await sb.rpc(nome, args);
+    return error ? { ok:false, motivo:error.message } : { ok:true, dados:data };
+  }
+
   async function historico(id){
     if(!online) return [];
     const { data } = await sb.from('historico').select('*').eq('repactuacao_id', id).order('criado_em',{ascending:false}).limit(30);
@@ -159,7 +165,7 @@ const DB = (() => {
 
   return {
     configurado, iniciar, entrar, sair, redefinirSenha, carregar,
-    salvarCampo, addAnotacao, delAnotacao, historico,
+    salvarCampo, addAnotacao, delAnotacao, historico, rpc,
     prefLocal: { get: lsGet, set: lsSet },
     get usuario(){ return usuario; },
     get online(){ return online; },
