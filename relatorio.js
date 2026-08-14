@@ -569,13 +569,8 @@ function docMensal(){
     /* As colunas de projeção só aparecem quando o Comercial já definiu meta de
        R$/m² para o ano; caso contrário seriam três colunas repetindo zero. */
     const meta=y>x;
-    const emps=[...new Set(S.map(i=>i.sig))]
-      .sort((p,q)=>soma(S.filter(i=>i.sig===q),i=>i.valor)-soma(S.filter(i=>i.sig===p),i=>i.valor));
-    const nota=`Concentração do ano: ${emps.slice(0,3).map(sg=>{const E=S.filter(i=>i.sig===sg);
-      return esc(EMPN[sg]||sg)+' ('+E.length+' contrato'+(E.length>1?'s':'')+', R$ '+brl(soma(E,i=>i.valor))+'/mês)';}).join(', ')}${emps.length>3?', além de mais '+(emps.length-3)+' empreendimento'+(emps.length-3>1?'s':''):''}. Ciclo trienal projetado a partir da última repactuação registrada de cada contrato; as datas mudam se houver repactuação antecipada ou distrato. ${meta?'O valor previsto usa a meta de R$/m² já definida pelo Comercial para este ano.':'O Comercial ainda não definiu meta de R$/m² para '+a+', por isso a projeção de valores não é exibida — apenas a base de contratos e a receita que entra em revisão.'}`;
     return `
    <h2 class="qbr">${n}. Repactuações de ${a}</h2>
-   <p class="sub">${nota}</p>
    <table class="kpi"><tr>
      <td><span>Repactuações previstas</span><b>${S.length}</b></td>
      <td><span>Empreendimentos</span><b>${nEmp}</b></td>
