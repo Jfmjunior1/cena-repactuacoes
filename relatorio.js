@@ -345,6 +345,9 @@ const ESTILO_REL = paraExcel => `
    table.loc th{font-size:8.2px;padding:5px 5px;white-space:normal;line-height:1.3}
    table.loc th.r{white-space:normal}
    table.loc td{padding:4px 5px}
+   table.ano{font-size:9.6px}
+   table.ano th{font-size:8.4px;padding:4px 6px}
+   table.ano td{padding:3.2px 6px}
    @media print{
      @page{size:A4 landscape;margin:11mm 12mm 9mm}
      /* imprime as cores de fundo mesmo com "gráficos de segundo plano" desmarcado */
@@ -556,21 +559,49 @@ function docMensal(){
      <td class="r">${c.proxRep?dbr(c.proxRep):'—'}</td>
      <td><span class="tag ${c.indet?'at':'ok'}">${c.indet?'Indet.':'Em prazo'}</span></td></tr>`).join('');
 
-  const s=`
-   <h2>1. Contratos por prazo indeterminado</h2>
-   <p class="sub">Locações cuja vigência original venceu e seguem válidas por prazo indeterminado. Somam ${ind.length} contratos e ${pc(soma(ind,c=>c.valor))} da receita.</p>
-   <h3 style="margin-top:0">Relação completa <span class="lt">· R$ ${brl(soma(ind,c=>c.valor))}/mês</span></h3>
-   <table><tr><th>Empreendimento</th><th>Cliente</th><th>Unidade</th><th>Garagem</th><th class="ctr">Vista</th><th class="r">Área m²</th><th class="r">Valor mensal</th><th class="r">Valor do m²</th><th class="r">Fim do prazo original</th><th class="r">Próxima repactuação</th></tr>
-     ${ind.map(c=>`<tr><td>${esc(EMPN[c.sig]||c.sig)}</td><td>${esc(c.cliente)}</td><td>${esc(curto(c.unidade,44))}</td>
-       <td>${esc(gar(c))||'—'}</td><td class="ctr">${c.vista?esc(c.vista):'—'}</td>
-       <td class="r">${c.m2?br2(c.m2):'—'}</td><td class="r">${c.valor?'R$ '+brl(c.valor):'a confirmar'}</td>
-       <td class="r">${c.valor&&c.m2?'R$ '+br2(c.valor/c.m2):'—'}</td>
-       <td class="r">${c.fim?dbr(c.fim):'—'}</td><td class="r">${c.proxRep?dbr(c.proxRep):'—'}</td></tr>`).join('')}
-     <tr class="tot"><td colspan="5">Subtotal</td><td class="r">${brl(soma(ind,c=>c.m2))}</td><td class="r">R$ ${brl(soma(ind,c=>c.valor))}</td>
-       <td class="r">${soma(ind,c=>c.m2)?'R$ '+br2(soma(ind,c=>c.valor)/soma(ind,c=>c.m2)):'—'}</td><td colspan="2"></td></tr></table>
-   <p class="obs">A locação por prazo indeterminado permanece válida e regida pelo contrato original (Lei 8.245/91), mas pode ser denunciada por qualquer das partes com aviso prévio. São ${ind.length} contratos nessa condição, ${pc(soma(ind,c=>c.valor))} da receita — recomenda-se avaliar a renovação formal junto com a repactuação.</p>
+  /* Seções detalhadas, uma por ano futuro, no mesmo formato da seção 2. */
+  const secAno=(a,n)=>{
+    const S=IT.filter(i=>i.ano===a).sort((x,y)=>x.data<y.data?-1:1);
+    if(!S.length) return '';
+    const x=soma(S,i=>i.valor), y=soma(S,prev), m=soma(S,i=>i.m2);
+    const nEmp=[...new Set(S.map(i=>i.sig))].length;
+    const nInd=S.filter(i=>i.prazo==='Indet.'||!i.fim||i.fim<HOJE).length;
+    /* As colunas de projeção só aparecem quando o Comercial já definiu meta de
+       R$/m² para o ano; caso contrário seriam três colunas repetindo zero. */
+    const meta=y>x;
+    const emps=[...new Set(S.map(i=>i.sig))]
+      .sort((p,q)=>soma(S.filter(i=>i.sig===q),i=>i.valor)-soma(S.filter(i=>i.sig===p),i=>i.valor));
+    const nota=`Concentração do ano: ${emps.slice(0,3).map(sg=>{const E=S.filter(i=>i.sig===sg);
+      return esc(EMPN[sg]||sg)+' ('+E.length+' contrato'+(E.length>1?'s':'')+', R$ '+brl(soma(E,i=>i.valor))+'/mês)';}).join(', ')}${emps.length>3?', além de mais '+(emps.length-3)+' empreendimento'+(emps.length-3>1?'s':''):''}. Ciclo trienal projetado a partir da última repactuação registrada de cada contrato; as datas mudam se houver repactuação antecipada ou distrato. ${meta?'O valor previsto usa a meta de R$/m² já definida pelo Comercial para este ano.':'O Comercial ainda não definiu meta de R$/m² para '+a+', por isso a projeção de valores não é exibida — apenas a base de contratos e a receita que entra em revisão.'}`;
+    return `
+   <h2 class="qbr">${n}. Repactuações de ${a}</h2>
+   <p class="sub">${nota}</p>
+   <table class="kpi"><tr>
+     <td><span>Repactuações previstas</span><b>${S.length}</b></td>
+     <td><span>Empreendimentos</span><b>${nEmp}</b></td>
+     <td><span>Área envolvida</span><b>${brl(m)} m²</b></td>
+     <td><span>Receita mensal em revisão</span><b>R$ ${brl(x)}</b></td>
+     <td><span>Receita anual equivalente</span><b>R$ ${brl(x*12)}</b></td>
+     <td><span>${meta?'Impacto anual estimado':'Por prazo indeterminado'}</span><b>${meta?'+R$ '+brl((y-x)*12):nInd+' de '+S.length}</b></td>
+   </tr></table>
+   <table class="ano"><tr><th>Data</th><th>Cliente</th><th>Local</th><th>Unidade</th><th class="r">Área m²</th><th class="r">Valor atual</th><th class="r">Valor do m²</th>${meta?'<th class="r">Valor previsto</th><th class="r">Diferença</th>':''}<th class="r">Fim do contrato</th><th>Vigência hoje</th></tr>
+     ${S.map(i=>{const ii=i.prazo==='Indet.'||!i.fim||i.fim<HOJE; return `<tr>
+       <td class="r">${dbr(i.data)}</td><td>${esc(i.cliente)}</td><td>${i.sig}</td><td>${esc(curto(i.unidade,44))}</td>
+       <td class="r">${i.m2?br2(i.m2):'—'}</td><td class="r">${i.valor?'R$ '+brl(i.valor):'a confirmar'}</td>
+       <td class="r">${i.valor&&i.m2?'R$ '+br2(i.valor/i.m2):'—'}</td>
+       ${meta?`<td class="r">R$ ${brl(prev(i))}</td><td class="r">${dif(i)>0?'+':''}R$ ${brl(dif(i))}</td>`:''}
+       <td class="r">${i.fim?dbr(i.fim):'—'}</td>
+       <td><span class="tag ${ii?'at':'ok'}">${ii?'Indet.':'Em prazo'}</span></td></tr>`;}).join('')}
+     <tr class="tot"><td colspan="4">Total de ${a}</td><td class="r">${brl(m)}</td>
+       <td class="r">R$ ${brl(x)}</td><td class="r">${m?'R$ '+br2(x/m):'—'}</td>
+       ${meta?`<td class="r">R$ ${brl(y)}</td><td class="r">+R$ ${brl(y-x)}</td>`:''}<td colspan="2"></td></tr></table>`;
+  };
+  const anosDet=futuros.filter(a=>IT.some(i=>i.ano===a));
+  const secoesAno=anosDet.map((a,k)=>secAno(a,4+k)).join('');
+  const nListagem=4+anosDet.length;
 
-   <h2 class="qbr">2. Repactuações de ${ANO_C}</h2>
+  const s=`
+   <h2>1. Repactuações de ${ANO_C}</h2>
    <table class="kpi"><tr>
      <td><span>Planejadas no ano</span><b>${doAnoC.length}</b></td>
      <td><span>Concluídas</span><b>${fe.length}</b></td>
@@ -589,7 +620,7 @@ function docMensal(){
      <tr class="tot"><td colspan="4">Total do ano</td><td class="r">R$ ${brl(soma(doAnoC,i=>i.valor))}</td>
        <td class="r">R$ ${brl(soma(doAnoC,prev))}</td><td class="r">+R$ ${brl(soma(doAnoC,dif))}</td><td colspan="2"></td></tr></table>
 
-   <h2>3. Tratativas em andamento</h2>
+   <h2>2. Tratativas em andamento</h2>
    ${emAnd.length?`<table><tr><th>Cliente</th><th>Local</th><th>Unidade</th><th>Etapa</th><th>Responsável</th><th class="r">Próximo contato</th><th class="r">Valor atual</th><th class="r">Pretendido</th></tr>
      ${emAnd.map(i=>`<tr><td>${esc(i.cliente)}</td><td>${i.sig}</td><td>${esc(curto(i.unidade,44))}</td>
        <td><span class="tag at">${esc(wf(i))}</span></td><td>${esc(ac(i.id).resp||'—')}</td>
@@ -597,15 +628,22 @@ function docMensal(){
        <td class="r">R$ ${brl(i.valor)}</td><td class="r">R$ ${brl(prev(i))}</td></tr>`).join('')}</table>`
     :'<p class="obs">Nenhuma tratativa em andamento nesta data. As demais repactuações do ano ainda não atingiram o prazo de abertura de negociação.</p>'}
 
-   <h2>4. Calendário de repactuações ${futuros.length?futuros[0]+' a '+futuros[futuros.length-1]:''}</h2>
-   <table><tr><th>Ano</th><th class="r">Contratos</th><th class="r">Área m²</th><th class="r">Valor atual</th><th class="r">Valor previsto</th><th class="r">Diferença mensal</th><th class="r">Impacto anual</th></tr>
+   <h2>3. Calendário de repactuações ${futuros.length?futuros[0]+' a '+futuros[futuros.length-1]:''}</h2>
+   ${(()=>{const metaFut=futuros.some(a=>{const S=IT.filter(i=>i.ano===a);return soma(S,prev)>soma(S,i=>i.valor);});
+     const tx=soma(IT.filter(i=>futuros.indexOf(i.ano)>=0),i=>i.valor);
+     return `<table><tr><th>Ano</th><th class="r">Contratos</th><th class="r">Empreendimentos</th><th class="r">Área m²</th><th class="r">Receita mensal em revisão</th><th class="r">Receita anual equivalente</th><th class="r">Por prazo indeterminado</th>${metaFut?'<th class="r">Impacto anual previsto</th>':''}</tr>
      ${futuros.map(a=>{const S=IT.filter(i=>i.ano===a),x=soma(S,i=>i.valor),y=soma(S,prev);
-       return `<tr><td>${a}</td><td class="r">${S.length}</td><td class="r">${brl(soma(S,i=>i.m2))}</td>
-         <td class="r">R$ ${brl(x)}</td><td class="r">R$ ${brl(y)}</td><td class="r">+R$ ${brl(y-x)}</td>
-         <td class="r">+R$ ${brl((y-x)*12)}</td></tr>`;}).join('')}</table>
-   <p class="obs">O valor previsto só incorpora meta de R$/m² onde o Comercial já a definiu — hoje, apenas no plano de ${ANO_C}. Nos anos seguintes o previsto repete o valor atual, de modo que os números acima são o piso, não a expectativa de ganho.</p>
-
-   <h2 class="qbr">5. Listagem de locatários</h2>
+       const ni=S.filter(i=>i.prazo==='Indet.'||!i.fim||i.fim<HOJE).length;
+       return `<tr><td>${a}</td><td class="r">${S.length}</td><td class="r">${[...new Set(S.map(i=>i.sig))].length}</td>
+         <td class="r">${brl(soma(S,i=>i.m2))}</td><td class="r">R$ ${brl(x)}</td><td class="r">R$ ${brl(x*12)}</td>
+         <td class="r">${ni} de ${S.length}</td>${metaFut?`<td class="r">+R$ ${brl((y-x)*12)}</td>`:''}</tr>`;}).join('')}
+     <tr class="tot"><td>Total ${futuros.length?futuros[0]+'–'+futuros[futuros.length-1]:''}</td>
+       <td class="r">${IT.filter(i=>futuros.indexOf(i.ano)>=0).length}</td><td class="r"></td>
+       <td class="r">${brl(soma(IT.filter(i=>futuros.indexOf(i.ano)>=0),i=>i.m2))}</td>
+       <td class="r">R$ ${brl(tx)}</td><td class="r">R$ ${brl(tx*12)}</td><td class="r"></td>${metaFut?'<td class="r"></td>':''}</tr></table>`;})()}
+   <p class="obs">Quadro de quantos contratos entram em ciclo de repactuação a cada ano e quanta receita mensal está em jogo. A projeção de valores não entra aqui porque o Comercial só definiu meta de R$/m² para ${ANO_C}; nos anos seguintes ela repetiria o valor atual.${anosDet.length?` Cada ano está detalhado, contrato a contrato, nas seções ${anosDet.length>1?'4 a '+(3+anosDet.length):'4'} a seguir.`:''}</p>
+${secoesAno}
+   <h2 class="qbr">${nListagem}. Listagem de locatários</h2>
    <p class="sub">Todas as ${C.length} unidades da carteira, agrupadas por empreendimento, incluindo as vagas e as de uso próprio.</p>
    ${sigs.map(sg=>{const S=C.filter(c=>c.sig===sg), sv=soma(S,c=>c.valor), sm=soma(S,c=>c.m2);
      return `<div class="band" style="background:${cor(sg)}">${esc(EMPN[sg]||sg)}<span>${sg} · ${S.length} unidade${S.length>1?'s':''}</span></div>
