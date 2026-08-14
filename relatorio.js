@@ -238,6 +238,7 @@ function docHTML(paraExcel){
 }
 
 const ESTILO_REL = paraExcel => `
+   *,*::before,*::after{-webkit-print-color-adjust:exact;print-color-adjust:exact}
    body{font-family:'Plus Jakarta Sans',Calibri,Arial,sans-serif;color:#1b2b38;background:#fff;
      max-width:1080px;margin:${paraExcel?'0':'34px auto'};padding:${paraExcel?'12px':'0 26px'}}
    .cab{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;border-bottom:3px solid #1c3a52;padding-bottom:14px;margin-bottom:6px}
@@ -344,6 +345,8 @@ const ESTILO_REL = paraExcel => `
    table.loc td{padding:4px 5px}
    @media print{
      @page{size:A4 landscape;margin:11mm 12mm 9mm}
+     /* imprime as cores de fundo mesmo com "gráficos de segundo plano" desmarcado */
+     *,*::before,*::after{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;color-adjust:exact !important}
      body{max-width:none;margin:0;padding:0}
      .phead img{height:12mm}
      .pfoot{margin-top:10px}
