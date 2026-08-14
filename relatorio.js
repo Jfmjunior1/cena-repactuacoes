@@ -35,6 +35,7 @@ const RCOLS=[
  {id:'fim',t:'Fim do contrato',v:i=>dbr(i.fim)},
  {id:'prazo',t:'Vigência',v:i=>i.prazo==='Indet.'?'Indeterminada':i.prazo},
  {id:'ult',t:'Última repactuação',v:i=>i.ult&&String(i.ult).includes('-')?dbr(i.ult):'—'},
+ {id:'vista',t:'Vista',v:i=>i.vista||'—'},
  {id:'locador',t:'Locador',v:i=>i.locador||'—'},
  {id:'sit',t:'Situação',v:i=>i.sit},
  {id:'simul',t:'Simulado',v:i=>sim[i.id]!=null?'Sim':'Não'},
@@ -254,6 +255,7 @@ const ESTILO_REL = paraExcel => `
    th{background:#1c3a52;color:#fff;padding:6px 7px;text-align:left;font-size:9px;letter-spacing:.05em;text-transform:uppercase;font-weight:bold;border:1px solid #1c3a52}
    td{padding:5px 7px;border:1px solid #e4dccf}
    td.r,th.r{text-align:right;white-space:nowrap}
+   td.ctr,th.ctr{text-align:center;white-space:nowrap}
    tr:nth-child(even) td{background:#faf7f2}
    tr.tot td{background:#f6e7d2;font-weight:bold;border-top:2px solid #c0762c}
    table.kpi td{border:0;border-left:3px solid #c0762c;padding:4px 14px 4px 11px;background:#fff!important;vertical-align:top}
@@ -388,7 +390,7 @@ function contratos(){
     return {
       sig:b.sig, emp:b.emp, cliente:b.cliente, unidade:b.unidade, gar:b.gar,
       m2:b.m2, valor:b.valor, ini:b.ini, fim:b.fim, prazo:b.prazo,
-      locador:b.locador, obs:b.sit, indet,
+      locador:b.locador, obs:b.sit, indet, vista:b.vista||'',
       ultRep: conc.length?conc[conc.length-1].data:(isData(b.ult)?b.ult:null),
       proxRep: pend.length?pend[0].data:null,
       proxAno: pend.length?pend[0].ano:null,
@@ -545,25 +547,27 @@ function docMensal(){
     return (!g||g==='-'||g===String(c.unidade).trim())?'':curto(g,40);};
   const linhas=L=>L.map(c=>`<tr>
      <td>${esc(c.cliente)}</td><td>${esc(curto(c.unidade,40))}</td><td>${esc(gar(c))||'—'}</td>
+     <td class="ctr">${c.vista?esc(c.vista):'—'}</td>
      <td class="r">${c.valor?'R$ '+br2(c.valor):'—'}</td>
      <td class="r">${c.m2?br2(c.m2):'—'}</td>
      <td class="r">${c.valor&&c.m2?'R$ '+br2(c.valor/c.m2):'—'}</td>
      <td class="r">${dbr(c.ini)}</td>
      <td class="r">${c.fim?dbr(c.fim):'—'}</td>
-     <td class="r">${c.ultRep?dbr(c.ultRep):'—'}</td>
      <td class="r">${c.proxRep?dbr(c.proxRep):'—'}</td>
-     <td><span class="tag ${c.indet?'at':'ok'}">${c.indet?'Indet.':'Em prazo'}</span></td>
-     <td><span class="tag ${c.classe}">${esc(c.situacao)}</span></td></tr>`).join('');
+     <td><span class="tag ${c.indet?'at':'ok'}">${c.indet?'Indet.':'Em prazo'}</span></td></tr>`).join('');
 
   const s=`
    <h2>1. Contratos por prazo indeterminado</h2>
    <p class="sub">Locações cuja vigência original venceu e seguem válidas por prazo indeterminado. Somam ${ind.length} contratos e ${pc(soma(ind,c=>c.valor))} da receita.</p>
    <h3 style="margin-top:0">Relação completa <span class="lt">· R$ ${brl(soma(ind,c=>c.valor))}/mês</span></h3>
-   <table><tr><th>Empreendimento</th><th>Cliente</th><th>Unidade</th><th class="r">Área m²</th><th class="r">Valor mensal</th><th class="r">Fim do prazo original</th><th class="r">Próxima repactuação</th></tr>
+   <table><tr><th>Empreendimento</th><th>Cliente</th><th>Unidade</th><th>Garagem</th><th class="ctr">Vista</th><th class="r">Área m²</th><th class="r">Valor mensal</th><th class="r">Valor do m²</th><th class="r">Fim do prazo original</th><th class="r">Próxima repactuação</th></tr>
      ${ind.map(c=>`<tr><td>${esc(EMPN[c.sig]||c.sig)}</td><td>${esc(c.cliente)}</td><td>${esc(curto(c.unidade,44))}</td>
+       <td>${esc(gar(c))||'—'}</td><td class="ctr">${c.vista?esc(c.vista):'—'}</td>
        <td class="r">${c.m2?br2(c.m2):'—'}</td><td class="r">${c.valor?'R$ '+brl(c.valor):'a confirmar'}</td>
+       <td class="r">${c.valor&&c.m2?'R$ '+br2(c.valor/c.m2):'—'}</td>
        <td class="r">${c.fim?dbr(c.fim):'—'}</td><td class="r">${c.proxRep?dbr(c.proxRep):'—'}</td></tr>`).join('')}
-     <tr class="tot"><td colspan="3">Subtotal</td><td class="r">${brl(soma(ind,c=>c.m2))}</td><td class="r">R$ ${brl(soma(ind,c=>c.valor))}</td><td colspan="2"></td></tr></table>
+     <tr class="tot"><td colspan="5">Subtotal</td><td class="r">${brl(soma(ind,c=>c.m2))}</td><td class="r">R$ ${brl(soma(ind,c=>c.valor))}</td>
+       <td class="r">${soma(ind,c=>c.m2)?'R$ '+br2(soma(ind,c=>c.valor)/soma(ind,c=>c.m2)):'—'}</td><td colspan="2"></td></tr></table>
    <p class="obs">A locação por prazo indeterminado permanece válida e regida pelo contrato original (Lei 8.245/91), mas pode ser denunciada por qualquer das partes com aviso prévio. São ${ind.length} contratos nessa condição, ${pc(soma(ind,c=>c.valor))} da receita — recomenda-se avaliar a renovação formal junto com a repactuação.</p>
 
    <h2 class="qbr">2. Repactuações de ${ANO_C}</h2>
@@ -601,27 +605,21 @@ function docMensal(){
          <td class="r">+R$ ${brl((y-x)*12)}</td></tr>`;}).join('')}</table>
    <p class="obs">O valor previsto só incorpora meta de R$/m² onde o Comercial já a definiu — hoje, apenas no plano de ${ANO_C}. Nos anos seguintes o previsto repete o valor atual, de modo que os números acima são o piso, não a expectativa de ganho.</p>
 
-   <h2 class="qbr">5. Listagem de locatários e situação de cada contrato</h2>
-   <p class="sub">Todas as ${C.length} unidades da carteira, agrupadas por empreendimento. Inclui as unidades vagas e as de uso próprio, sinalizadas na coluna de situação.</p>
+   <h2 class="qbr">5. Listagem de locatários</h2>
+   <p class="sub">Todas as ${C.length} unidades da carteira, agrupadas por empreendimento, incluindo as vagas e as de uso próprio.</p>
    ${sigs.map(sg=>{const S=C.filter(c=>c.sig===sg), sv=soma(S,c=>c.valor), sm=soma(S,c=>c.m2);
      return `<div class="band" style="background:${cor(sg)}">${esc(EMPN[sg]||sg)}<span>${sg} · ${S.length} unidade${S.length>1?'s':''}</span></div>
-      <table class="loc"><colgroup><col style="width:14%"><col style="width:10%"><col style="width:8%"><col style="width:8%"><col style="width:6%"><col style="width:7%">
-        <col style="width:7%"><col style="width:7%"><col style="width:8%"><col style="width:8%"><col style="width:6%"><col style="width:8%"></colgroup>
-      <tr><th>Cliente</th><th>Unidade</th><th>Garagem</th><th class="r">Valor contrato</th><th class="r">M² priv. sala</th><th class="r">Valor do m² locação</th>
-        <th class="r">Início do contrato</th><th class="r">Fim do contrato</th><th class="r">Última renegociação</th><th class="r">Próxima renegociação</th><th>Vigência</th><th>Situação</th></tr>
+      <table class="loc"><colgroup><col style="width:16%"><col style="width:11%"><col style="width:10%"><col style="width:5%"><col style="width:9%"><col style="width:7%"><col style="width:8%">
+        <col style="width:8%"><col style="width:8%"><col style="width:10%"><col style="width:8%"></colgroup>
+      <tr><th>Cliente</th><th>Unidade</th><th>Garagem</th><th class="ctr">Vista</th><th class="r">Valor contrato</th><th class="r">M² priv. sala</th><th class="r">Valor do m² locação</th>
+        <th class="r">Início do contrato</th><th class="r">Fim do contrato</th><th class="r">Próxima renegociação</th><th>Vigência</th></tr>
       ${linhas(S)}
-      <tr class="tot"><td colspan="3">Total dos contratos</td><td class="r">${sv?'R$ '+br2(sv):'—'}</td><td class="r">${br2(sm)}</td>
-        <td class="r">${sv&&sm?'R$ '+br2(sv/sm):'—'}</td><td colspan="6"></td></tr></table>`;}).join('')}
+      <tr class="tot"><td colspan="4">Total dos contratos</td><td class="r">${sv?'R$ '+br2(sv):'—'}</td><td class="r">${br2(sm)}</td>
+        <td class="r">${sv&&sm?'R$ '+br2(sv/sm):'—'}</td><td colspan="4"></td></tr></table>`;}).join('')}
    <table><tr class="tot"><td>Total geral · ${C.length} unidades · ${oc.length} locadas</td><td class="r">${br2(area)} m²</td>
      <td class="r">R$ ${br2(rec)}/mês</td><td class="r">R$ ${areaOc?br2(rec/areaOc):'—'}/m²</td><td class="r">R$ ${brl(rec*12)}/ano</td></tr></table>
 
-   <h2>6. Nota metodológica</h2>
-   <p class="obs"><b>Regra de repactuação:</b> a cada três anos, contada da última ou da próxima renegociação registrada no controle de locações, projetada até o fim da vigência. Contratos prorrogados por prazo indeterminado tiveram dois ciclos projetados.<br><br>
-   <b>Valor previsto:</b> o valor efetivamente repactuado quando a negociação já foi fechada; o valor simulado no painel quando houver; o valor alvo do Comercial quando definido; na falta de todos, repete o valor atual.<br><br>
-   <b>Fonte:</b> planilha “Controle Contratos de Locação 2023 / 2024 / 2025 e 2026”, aba “Consolidado - Imóveis”, e plano de repactuação de ${ANO_C}. Posição em ${dbr(HOJE)}. Minutas e aditivos no SharePoint; tratativas registradas no ClickUp.<br><br>
-   <b>Pontos em conferência:</b> Zenith (L01) e Orbis (L02) constam com o mesmo valor de contrato, o que distorce o R$/m² das duas unidades; B2B (S502) e AMAX/AGAH (S221) estão sem valor de contrato no controle e por isso não somam receita neste relatório; e o registro de última repactuação do IG Centro de Fisioterapia (S1002) está com data futura. Todos aguardam confirmação do Comercial.<br><br>
-   <b>Identificação das unidades:</b> descrições muito longas de vagas de garagem aparecem abreviadas nas tabelas; a relação completa está no painel e no controle de locações.<br><br>
-   <b>Confidencialidade:</b> documento interno da Cena Empreendimentos. Contém dados de locatários protegidos pela LGPD — não distribuir a terceiros. Alterações societárias, de garantia ou de fiança devem ser validadas com a Diretoria.</p>`;
+`;
 
   return `<html><head><meta charset="utf-8"><title>Locações e Repactuações — ${mesExt(HOJE)} — Cena Empreendimentos</title>
   <style>${ESTILO_REL(false)}</style></head><body>

@@ -326,6 +326,15 @@ function renderDet(){
         <div class="dk"><div class="k">Fim</div><div class="v sm">${dbr(i.fim)}</div></div>
         <div class="dk"><div class="k">Últ. repactuação</div><div class="v sm">${i.ult&&String(i.ult).includes('-')?dbr(i.ult):'—'}</div></div>
         <div class="dk"><div class="k">Locador</div><div class="v sm">${esc(i.locador||'—')}</div></div>
+        <div class="dk"><div class="k">Garagem</div><div class="v sm">${i.gar&&i.gar!=='-'?esc(i.gar):'—'}</div></div>
+        <div class="dk"><div class="k">Vista</div><div class="v sm">${
+          DB.podeEditar()
+          ? `<select id="fVista" class="selv">
+               <option value=""${!i.vista?' selected':''}>não informado</option>
+               <option value="Sim"${i.vista==='Sim'?' selected':''}>Sim</option>
+               <option value="Não"${i.vista==='Não'?' selected':''}>Não</option>
+             </select>`
+          : (i.vista||'não informado')}</div></div>
       </div>
       <div class="note" style="margin-top:11px">${pill(i.sit)} &nbsp; ${i.plano?'Consta no plano de repactuação de 2026.':'Data calculada por: <b>'+esc(i.origem.toLowerCase())+'</b>.'}</div>
     </div>
@@ -417,6 +426,15 @@ function renderDet(){
     el.querySelectorAll('.wf button').forEach(x=>x.classList.toggle('on',x===b));
     toast('Etapa: '+b.dataset.w); renderLista(); renderNums();});
   const rp=document.getElementById('acResp'), px=document.getElementById('acProx');
+  const fv=document.getElementById('fVista');
+  if(fv) fv.onchange=async()=>{
+    const cid=i.id.slice(0, i.id.lastIndexOf('|'));
+    const v=fv.value;
+    const r=await DB.salvarVista(cid, v);
+    if(!r.ok){ toast('Não foi possível gravar a vista: '+r.motivo); return; }
+    IT.concat(SEM).forEach(x=>{ if(x.id.indexOf(cid+'|')===0) x.vista=v; });
+    toast(v?('Vista: '+v):'Vista removida');
+  };
   rp.onchange=()=>acSet(i.id,'resp',rp.value);
   px.onchange=()=>{acSet(i.id,'prox',px.value); renderLista();};
   document.getElementById('acAdd').onclick=()=>{

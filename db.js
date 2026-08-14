@@ -71,7 +71,7 @@ const DB = (() => {
         status:r.status, mesCom:r.mes_com, mesRep:r.mes_rep, prazo:r.prazo,
         ini:r.inicio, fim:r.fim, ult:r.ult_repactuacao, origem:r.origem,
         locador:r.locador, admin:r.administracao, rm2src:num(r.rm2_controle),
-        plano:!!r.plano_2026, sit:r.situacao_contrato
+        plano:!!r.plano_2026, sit:r.situacao_contrato, vista:r.vista||''
       };
       if(r.sem_previsao) sem.push(o); else itens.push(o);
       if(r.simulacao!=null) sim[r.id]=num(r.simulacao);
@@ -147,6 +147,14 @@ const DB = (() => {
     return error ? { ok:false, motivo:error.message } : { ok:true };
   }
 
+  /* vista é preenchida por editor no painel e aplicada a todos os ciclos do contrato */
+  async function salvarVista(contratoId, valor){
+    if(!online) return { ok:false, motivo:'painel em modo local' };
+    if(!podeEditar()) return { ok:false, motivo:'sem-permissao' };
+    const { error } = await sb.rpc('definir_vista', { p_contrato: contratoId, p_vista: valor || null });
+    return error ? { ok:false, motivo:error.message } : { ok:true };
+  }
+
   async function rpc(nome, args){
     if(!online) return { ok:false, motivo:'painel em modo local' };
     const { data, error } = await sb.rpc(nome, args);
@@ -165,7 +173,7 @@ const DB = (() => {
 
   return {
     configurado, iniciar, entrar, sair, redefinirSenha, carregar,
-    salvarCampo, addAnotacao, delAnotacao, historico, rpc,
+    salvarCampo, addAnotacao, delAnotacao, historico, rpc, salvarVista,
     prefLocal: { get: lsGet, set: lsSet },
     get usuario(){ return usuario; },
     get online(){ return online; },

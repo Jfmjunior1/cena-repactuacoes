@@ -210,14 +210,14 @@ begin
         insert into public.repactuacoes (
           id, ano, data, sigla, cliente, unidade, garagem, m2, valor,
           status, prazo, inicio, fim, ult_repactuacao, origem, locador,
-          administracao, rm2_controle, situacao_contrato, sem_previsao, fonte)
+          administracao, rm2_controle, situacao_contrato, sem_previsao, fonte, vista)
         values (
           v_rid, extract(year from v_data)::int, v_data, ct.sigla, ct.cliente,
           ct.unidade, ct.garagem, ct.m2, ct.valor, 'Previsto',
           case when v_indet then 'Indet.'
                else lower(to_char(ct.fim,'TMmon')) || '/' || to_char(ct.fim,'YY') end,
           ct.inicio, ct.fim, ct.historico, v_origem, ct.locador, ct.administracao,
-          ct.rm2_controle, ct.situacao, false, 'planilha');
+          ct.rm2_controle, ct.situacao, false, 'planilha', ct.vista);
         v_cri := v_cri + 1;
         v_mud := v_mud || jsonb_build_object('tipo','ciclo_novo','contrato',ct.id,'data',v_data);
       end if;
