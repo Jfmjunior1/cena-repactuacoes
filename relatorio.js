@@ -15,8 +15,8 @@ const RCOLS=[
  {id:'cliente',t:'Cliente',v:i=>i.cliente},
  {id:'emp',t:'Empreendimento',v:i=>i.emp},
  {id:'sig',t:'Local',v:i=>i.sig},
- {id:'unidade',t:'Unidade',v:i=>i.unidade},
- {id:'gar',t:'Vaga garagem',v:i=>i.gar&&i.gar!=='-'?i.gar:''},
+ {id:'unidade',t:'Unidade',v:i=>curto(i.unidade,60)},
+ {id:'gar',t:'Vaga garagem',v:i=>i.gar&&i.gar!=='-'?curto(i.gar,60):''},
  {id:'m2',t:'Área m²',n:1,v:i=>i.m2,f:v=>v?br2(v):'—'},
  {id:'valor',t:'Valor atual',n:1,v:i=>i.valor,f:v=>'R$ '+brl(v)},
  {id:'rm2',t:'R$/m² atual',n:1,v:i=>rm2(i),f:v=>v?'R$ '+br2(v):'—'},
@@ -140,11 +140,12 @@ function docHTML(paraExcel){
   const cols=RCOLS.filter(c=>R.cols.includes(c.id));
   const anosSel=[...new Set(L.map(i=>i.ano))].sort();
   const sigsSel=[...new Set(L.map(i=>i.sig))].sort((a,b)=>soma(L.filter(i=>i.sig===b),i=>i.valor)-soma(L.filter(i=>i.sig===a),i=>i.valor));
+  let _n=0; const nSec=()=>++_n;
   const recorte=`${R.anos.length?R.anos.slice().sort().join(', '):`${ANOS[0]} a ${ANOS[ANOS.length-1]}`} · ${R.sigs.length?R.sigs.map(s=>EMPN[s]||s).join(', '):'todos os empreendimentos'}`;
   let s='';
 
   if(R.secs.includes('resumo')) s+=`
-   <h2>Resumo executivo</h2>
+   <h2>${nSec()}. Resumo executivo</h2>
    <table class="kpi"><tr>
      <td><span>Repactuações</span><b>${L.length}</b></td>
      <td><span>Área envolvida</span><b>${brl(soma(L,i=>i.m2))} m²</b></td>
@@ -155,8 +156,8 @@ function docHTML(paraExcel){
    </tr></table>`;
 
   if(R.secs.includes('porAno')&&anosSel.length) s+=`
-   <h2>Consolidado por ano</h2>
-   <table><tr><th>Ano</th><th class="r">Contratos</th><th class="r">Área m²</th><th class="r">Valor atual</th>
+   <h2>${nSec()}. Consolidado por ano</h2>
+   <table class="ano"><tr><th>Ano</th><th class="r">Contratos</th><th class="r">Área m²</th><th class="r">Valor atual</th>
      <th class="r">Valor previsto</th><th class="r">Diferença</th><th class="r">%</th></tr>
    ${anosSel.map(a=>{const S=L.filter(i=>i.ano===a),x=soma(S,i=>i.valor),y=soma(S,prev);
      return `<tr><td>${a}</td><td class="r">${S.length}</td><td class="r">${brl(soma(S,i=>i.m2))}</td>
@@ -167,8 +168,8 @@ function docHTML(paraExcel){
      <td class="r">${va?((d/va)*100).toFixed(1).replace('.',','):'—'}%</td></tr></table>`;
 
   if(R.secs.includes('porEmp')&&sigsSel.length) s+=`
-   <h2>Consolidado por empreendimento</h2>
-   <table><tr><th>Empreendimento</th><th>Sigla</th><th class="r">Contratos</th><th class="r">Área m²</th>
+   <h2>${nSec()}. Consolidado por empreendimento</h2>
+   <table class="ano"><tr><th>Empreendimento</th><th>Sigla</th><th class="r">Contratos</th><th class="r">Área m²</th>
      <th class="r">Valor atual</th><th class="r">Valor previsto</th><th class="r">Diferença</th><th class="r">%</th></tr>
    ${sigsSel.map(sg=>{const S=L.filter(i=>i.sig===sg),x=soma(S,i=>i.valor),y=soma(S,prev);
      return `<tr><td>${esc(EMPN[sg]||sg)}</td><td>${sg}</td><td class="r">${S.length}</td><td class="r">${brl(soma(S,i=>i.m2))}</td>
@@ -179,10 +180,10 @@ function docHTML(paraExcel){
      <td class="r">${va?((d/va)*100).toFixed(1).replace('.',','):'—'}%</td></tr></table>`;
 
   if(R.secs.includes('detalhe')&&cols.length) s+=`
-   <h2>Detalhamento dos contratos</h2>
+   <h2 class="qbr">${nSec()}. Detalhamento dos contratos</h2>
    ${sigsSel.map(sg=>{const S=L.filter(i=>i.sig===sg),x=soma(S,i=>i.valor),y=soma(S,prev);
      return `<h3>${esc(EMPN[sg]||sg)} <span class="lt">· ${sg} · ${S.length} contrato${S.length>1?'s':''}</span></h3>
-      <table><tr>${cols.map(c=>`<th class="${c.n?'r':''}">${c.t}</th>`).join('')}</tr>
+      <table class="ano"><tr>${cols.map(c=>`<th class="${c.n?'r':''}">${c.t}</th>`).join('')}</tr>
       ${S.map(i=>`<tr>${cols.map(c=>{const raw=c.v(i);const txt=c.f?c.f(raw):(raw==null||raw===''?'—':String(raw));
         return `<td class="${c.n?'r':''}">${esc(txt)}</td>`;}).join('')}</tr>`).join('')}
       <tr class="tot">${cols.map((c,k)=>{
@@ -197,8 +198,8 @@ function docHTML(paraExcel){
 
   if(R.secs.includes('simulacoes')){
     const S=L.filter(i=>sim[i.id]!=null);
-    s+=`<h2>Simulações registradas</h2>`+
-     (S.length?`<table><tr><th>Data</th><th>Cliente</th><th>Local</th><th>Unidade</th><th class="r">Valor atual</th>
+    s+=`<h2 class="qbr">${nSec()}. Simulações registradas</h2>`+
+     (S.length?`<table class="ano"><tr><th>Data</th><th>Cliente</th><th>Local</th><th>Unidade</th><th class="r">Valor atual</th>
        <th class="r">Valor simulado</th><th class="r">Diferença</th><th class="r">%</th></tr>
        ${S.map(i=>`<tr><td>${dbr(i.data)}</td><td>${esc(i.cliente)}</td><td>${i.sig}</td><td>${esc(i.unidade)}</td>
          <td class="r">R$ ${brl(i.valor)}</td><td class="r">R$ ${brl(sim[i.id])}</td><td class="r">+R$ ${brl(dif(i))}</td>
@@ -207,8 +208,8 @@ function docHTML(paraExcel){
   }
 
   if(R.secs.includes('metas')) s+=`
-   <h2>Valores alvo por empreendimento</h2>
-   <table><tr><th>Empreendimento</th><th>Sigla</th><th class="r">Contratos com alvo</th><th class="r">R$/m² alvo médio</th>
+   <h2>${nSec()}. Valores alvo por empreendimento</h2>
+   <table class="ano"><tr><th>Empreendimento</th><th>Sigla</th><th class="r">Contratos com alvo</th><th class="r">R$/m² alvo médio</th>
      <th class="r">R$/m² médio atual</th><th class="r">Defasagem</th></tr>
    ${sigsSel.map(sg=>{const S=L.filter(i=>i.sig===sg), CA=S.filter(i=>alvoM2(i)!=null);
      const med=soma(S,i=>i.valor)/(soma(S,i=>i.m2)||1);
@@ -219,23 +220,79 @@ function docHTML(paraExcel){
    <p class="obs">O valor alvo só está definido onde o Comercial já fixou a meta — hoje, apenas no plano de 2026. Nos anos seguintes o campo permanece em branco até a definição, e o valor previsto repete o valor atual. Premissa interna de trabalho; não representa proposta formal ao locatário.</p>`;
 
   if(R.secs.includes('notas')) s+=`
-   <h2>Nota metodológica</h2>
+   <h2 class="qbr">${nSec()}. Nota metodológica</h2>
    <p class="obs"><b>Regra aplicada:</b> repactuação a cada três anos, contada a partir da última ou da próxima renegociação registrada no controle de locações, projetada até o fim da vigência de cada contrato. Contratos com vigência vencida e prorrogada por prazo indeterminado aparecem como “Indeterminada” e tiveram dois ciclos projetados.<br><br>
    <b>Valor previsto:</b> corresponde ao valor efetivamente repactuado quando a negociação já foi fechada; ao valor simulado neste painel quando houver simulação; ao valor alvo definido pelo Comercial quando houver; e, na falta de todos, repete o valor atual — caso dos anos ainda sem definição de meta.<br><br>
    <b>Fonte:</b> planilha “Controle Contratos de Locação 2023 / 2024 / 2025 e 2026”, aba “Consolidado - Imóveis”, posição em ${dbr(HOJE)}. Minutas e aditivos no SharePoint; tratativas registradas no ClickUp.<br><br>
    <b>Confidencialidade:</b> documento interno da Cena Empreendimentos. Contém dados de locatários protegidos pela LGPD — não distribuir a terceiros. Alterações societárias, de garantia ou de fiança devem ser validadas com a Diretoria.</p>`;
 
   const estilo = ESTILO_REL(paraExcel);
+  /* Mesma capa executiva do relatório mensal, mas com os números do recorte
+     escolhido no modal — nunca os da carteira inteira, para não dizer à
+     Diretoria uma coisa na capa e outra nas tabelas. */
+  const capa = paraExcel ? '' : capaHTML(capaRecorte(L, recorte));
 
   return `<html><head><meta charset="utf-8"><title>Repactuações de locação — Cena Empreendimentos</title>
   <style>${estilo}</style></head><body>
-  ${moldura(`<div class="cab">
+  ${capa}
+  ${moldura(`${paraExcel?`<div class="cab">
     <div><div class="ov">Relatório interno · Gestão de locações</div>
       <h1>Planejamento de repactuações</h1>
       <div class="s">${esc(recorte)}</div></div>
     <div class="dt">Posição em ${dbr(HOJE)}<br>${L.length} contrato${L.length>1?'s':''} no recorte<br>Emitido por ${esc(DB.usuario?DB.usuario.nome:'painel interno')}</div>
-  </div>${s}`)}
+  </div>`:`<div class="cap"><b>${esc(recorte)}</b><b>${L.length} repactuações</b><b>R$ ${brl(va)}/mês</b><b>+R$ ${brl(d)}/mês previstos</b></div>`}${s}`)}
   </body></html>`;
+}
+
+/* Monta os dados da capa a partir do recorte de repactuações selecionado. */
+function capaRecorte(L, recorte){
+  const idc = i => i.id.slice(0, i.id.lastIndexOf('|'));
+  const contratos = [...new Set(L.map(idc))].length;
+  const emps = [...new Set(L.map(i=>i.sig))].length;
+  const anosSel = [...new Set(L.map(i=>i.ano))].sort();
+  const ind = i => i.prazo==='Indet.' || !i.fim || i.fim<HOJE;
+  const D = L.filter(i=>!ind(i)), I = L.filter(ind);
+  const area = soma(L,i=>i.m2), va = soma(L,i=>i.valor), vp = soma(L,prev);
+  const fe = L.filter(feito), and = L.filter(emAndamento);
+  const pct = (x,t) => t ? (x/t*100).toFixed(1).replace('.',',')+'%' : '—';
+  return {
+    ov:'Relatório personalizado · Gestão de locações',
+    tit:'Planejamento de repactuações',
+    sub:'Recorte selecionado no painel: '+recorte,
+    badge:'Repactuações do recorte',
+    ref: recorte.length>46 ? recorte.slice(0,44)+'…' : recorte,
+    autor: DB.usuario?DB.usuario.nome:'painel interno',
+    side:[['Recorte', anosSel.length?anosSel.join(', '):'todos os anos'],
+          ['Repactuações', L.length],
+          ['Contratos', contratos+' contratos'],
+          ['Empreendimentos', emps]],
+    kpis:[['Repactuações no recorte', L.length+''],
+          ['Contratos envolvidos', contratos+' contratos'],
+          ['Área envolvida', brl(area)+' m²'],
+          ['Valor atual', 'R$ '+brl(va)+'/mês'],
+          ['Diferença prevista', '+R$ '+brl(vp-va)+'/mês']],
+    contratos: L.length, emps: emps, locadas: contratos, unidades: contratos,
+    receita: va, areaOc: area, areaDet: soma(D,i=>i.m2), areaInd: soma(I,i=>i.m2),
+    areaVaga: 0, vagas: 0,
+    pctDet: pct(soma(D,i=>i.m2), area), pctInd: pct(soma(I,i=>i.m2), area),
+    nDet: D.length, nInd: I.length,
+    recDet: soma(D,i=>i.valor), recInd: soma(I,i=>i.valor),
+    pctRecDet: pct(soma(D,i=>i.valor), va), pctRecInd: pct(soma(I,i=>i.valor), va),
+    plano: L.length, feitas: fe.length, andamento: and.length,
+    pend: L.length - fe.length - and.length,
+    pctPlano: pct(fe.length, L.length), pctAnd: pct(and.length, L.length),
+    pctPend: pct(L.length-fe.length-and.length, L.length),
+    ganho: soma(fe,dif), aGanhar: soma(L.filter(i=>!feito(i)),dif),
+    tComp:'Composição do recorte', tPlano:'Andamento das repactuações',
+    tBars:'Repactuações por ano do recorte',
+    rotDet:'Dentro do prazo de contrato', rotInd:'Prazo indeterminado',
+    rotTot:'Total do recorte', rotAnel:'m² no recorte',
+    nComp:`${L.length} repactuações de ${contratos} contrato${contratos===1?'':'s'} em ${emps} empreendimento${emps===1?'':'s'}.`,
+    nSit:`O valor atual do recorte equivale a R$ ${brl(va*12)} ao ano.`,
+    anos: anosSel.map(a=>{const S=L.filter(i=>i.ano===a);
+      return {ano:a, n:S.length, atual:soma(S,i=>i.valor),
+              dif:Math.max(0, soma(S,prev)-soma(S,i=>i.valor))};})
+  };
 }
 
 const ESTILO_REL = paraExcel => `
@@ -418,14 +475,18 @@ function anelSVG(pct, cor, fundo, texto, sub){
 }
 function capaHTML(d){
   const maxImp = Math.max(1, ...d.anos.map(a=>a.atual + a.dif));
+  /* Textos e blocos com valor padrão: o relatório mensal usa o padrão,
+     o personalizado sobrescreve com os números do recorte escolhido. */
+  const side = d.side || [['Referência',d.ref],['Unidades',d.unidades],
+    ['Contratos',d.contratos+' contratos'],['Empreendimentos',d.emps]];
+  const kpis = d.kpis || [['Receita mensal contratada','R$ '+brl(d.receita)],
+    ['Contratos ativos',d.contratos+' contratos'],['Área locada',brl(d.areaOc)+' m²'],
+    ['Unidades locadas',d.locadas+' unidades'],['Empreendimentos',d.emps+' empreend.']];
   return `<section class="capa">
   <aside class="cside">
     <img class="clogo" src="${LOGO}" alt="Cena Empreendimentos">
     <div class="cinfo">
-      <div class="ci"><span>Referência</span><b>${d.ref}</b></div>
-      <div class="ci"><span>Unidades</span><b>${d.unidades}</b></div>
-      <div class="ci"><span>Contratos</span><b>${d.contratos} contratos</b></div>
-      <div class="ci"><span>Empreendimentos</span><b>${d.emps}</b></div>
+      ${side.map(([k,v])=>`<div class="ci"><span>${esc(String(k))}</span><b>${esc(String(v))}</b></div>`).join('')}
     </div>
     <div class="cfoot">Emitido em ${dbr(HOJE)}<br>Por ${esc(d.autor)}</div>
     <svg class="cart" viewBox="0 0 200 150" fill="none" stroke="#7f9cb3" stroke-width="1.4">
@@ -436,43 +497,38 @@ function capaHTML(d){
   <div class="cmain">
     <header class="chead">
       <div>
-        <div class="cov">Relatório mensal · Diretoria</div>
-        <h1 class="ctit">Locações e Repactuações</h1>
+        <div class="cov">${esc(d.ov||'Relatório mensal · Diretoria')}</div>
+        <h1 class="ctit">${esc(d.tit||'Locações e Repactuações')}</h1>
         <div class="crule"></div>
-        <p class="csub">Visão executiva da carteira de locações: contratos, receita, área e andamento das repactuações.</p>
+        <p class="csub">${esc(d.sub||'Visão executiva da carteira de locações: contratos, receita, área e andamento das repactuações.')}</p>
       </div>
       <div class="cbadge">
         <div class="cbn">${d.feitas} <span>de ${d.plano}</span></div>
         <div class="cbl">concluídas</div>
-        <div class="cbf">Plano anual de repactuações</div>
+        <div class="cbf">${esc(d.badge||'Plano anual de repactuações')}</div>
       </div>
     </header>
 
     <div class="ckpi">
-      ${[['Receita mensal contratada','R$ '+brl(d.receita)],
-         ['Contratos ativos',d.contratos+' contratos'],
-         ['Área locada',brl(d.areaOc)+' m²'],
-         ['Unidades locadas',d.locadas+' unidades'],
-         ['Empreendimentos',d.emps+' empreend.']]
-        .map(([k,v])=>`<div class="ck"><span>${k}</span><b>${v}</b></div>`).join('')}
+      ${kpis.map(([k,v])=>`<div class="ck"><span>${esc(String(k))}</span><b>${esc(String(v))}</b></div>`).join('')}
     </div>
 
     <div class="cgrid">
       <div class="cbox">
-        <h3>Composição da carteira</h3>
+        <h3>${esc(d.tComp||'Composição da carteira')}</h3>
         <div class="cflex">
-          ${anelSVG(d.areaDet/(d.areaOc||1), '#1c3a52', '#c3d2dd', brl(d.areaOc), 'm² locados')}
+          ${anelSVG(d.areaDet/(d.areaOc||1), '#1c3a52', '#c3d2dd', brl(d.areaOc), d.rotAnel||'m² locados')}
           <table class="cmini">
-            <tr><td><i style="background:#1c3a52"></i>Dentro do prazo</td><td class="r">${brl(d.areaDet)} m²</td><td class="r">${d.pctDet}</td></tr>
-            <tr><td><i style="background:#c3d2dd"></i>Prazo indeterminado</td><td class="r">${brl(d.areaInd)} m²</td><td class="r">${d.pctInd}</td></tr>
-            <tr class="t"><td>Total locado</td><td class="r">${brl(d.areaOc)} m²</td><td class="r">100,0%</td></tr>
+            <tr><td><i style="background:#1c3a52"></i>${esc(d.rotDet||'Dentro do prazo')}</td><td class="r">${brl(d.areaDet)} m²</td><td class="r">${d.pctDet}</td></tr>
+            <tr><td><i style="background:#c3d2dd"></i>${esc(d.rotInd||'Prazo indeterminado')}</td><td class="r">${brl(d.areaInd)} m²</td><td class="r">${d.pctInd}</td></tr>
+            <tr class="t"><td>${esc(d.rotTot||'Total locado')}</td><td class="r">${brl(d.areaOc)} m²</td><td class="r">100,0%</td></tr>
           </table>
         </div>
-        <p class="cnota">Fora da carteira locada há ${d.vagas} unidade${d.vagas===1?'':'s'} vaga${d.vagas===1?'':'s'} ou em uso próprio, somando ${brl(d.areaVaga)} m².</p>
+        <p class="cnota">${d.nComp||`Fora da carteira locada há ${d.vagas} unidade${d.vagas===1?'':'s'} vaga${d.vagas===1?'':'s'} ou em uso próprio, somando ${brl(d.areaVaga)} m².`}</p>
       </div>
 
       <div class="cbox cop">
-        <h3>Plano anual de repactuações</h3>
+        <h3>${esc(d.tPlano||'Plano anual de repactuações')}</h3>
         <div class="cflex">
           ${anelSVG(d.feitas/(d.plano||1), '#c0762c', '#f2ddc2', d.pctPlano, 'concluído')}
           <table class="cmini">
@@ -492,11 +548,11 @@ function capaHTML(d){
           <tr><td>Prorrogado por prazo indeterminado</td><td class="r">${d.nInd}</td><td class="r">${brl(d.areaInd)}</td><td class="r">${brl(d.recInd)}</td><td class="r">${d.pctRecInd}</td></tr>
           <tr class="t"><td>Total</td><td class="r">${d.contratos}</td><td class="r">${brl(d.areaOc)}</td><td class="r">${brl(d.receita)}</td><td class="r">100,0%</td></tr>
         </table>
-        <p class="cnota">A receita contratada equivale a R$ ${brl(d.receita*12)} ao ano.</p>
+        <p class="cnota">${d.nSit||`A receita contratada equivale a R$ ${brl(d.receita*12)} ao ano.`}</p>
       </div>
 
       <div class="cbox">
-        <h3>Impacto das repactuações por ano</h3>
+        <h3>${esc(d.tBars||'Impacto das repactuações por ano')}</h3>
         <div class="cbars">
           ${d.anos.map(a=>`<div class="cb">
              <div class="cbv">${brl((a.atual+a.dif)/1000)} mil</div>
