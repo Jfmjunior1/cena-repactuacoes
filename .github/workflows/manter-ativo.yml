@@ -1,0 +1,56 @@
+# ============================================================
+#  Mantém o projeto Supabase ativo
+#
+#  O plano gratuito do Supabase pausa o projeto após 7 dias sem
+#  nenhuma requisição. Como o painel de repactuações é consultado
+#  em ciclos (perto do fechamento do mês, quando sai o relatório),
+#  é normal passar mais de uma semana sem ninguém abrir — e aí o
+#  banco pausa e o painel para de funcionar até alguém reativar
+#  manualmente no dashboard.
+#
+#  Esta rotina faz uma consulta mínima ao banco a cada 3 dias,
+#  o que já conta como atividade e impede a pausa.
+#
+#  Custo: zero. Rodando em repositório público, o GitHub Actions
+#  é gratuito e sem limite de minutos.
+#
+#  Atenção: o GitHub desativa rotinas agendadas em repositórios
+#  sem nenhuma atividade por 60 dias. Ele avisa por e-mail antes;
+#  basta reativar no menu Actions.
+# ============================================================
+name: Manter Supabase ativo
+
+on:
+  schedule:
+    # 09:10 UTC (06:10 em Florianópolis) nos dias 1, 4, 7, ... de cada mês
+    - cron: '10 9 */3 * *'
+  workflow_dispatch:        # permite disparar na mão pelo menu Actions
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Consultar o banco
+        env:
+          # A chave anon é pública por natureza: o acesso real é controlado
+          # pelas políticas de RLS e ninguém lê nada sem estar autenticado.
+          URL: https://ggdggcjbnhabgwsqepnk.supabase.co
+          KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdnZGdnY2pibmhhYmd3c3FlcG5rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1MzEwMjYsImV4cCI6MjEwMjEwNzAyNn0.mAvC0dKAkuVlCg4ysxQujmlvD_9VhVPEX_B8tB21B1E
+        run: |
+          set -e
+          codigo=$(curl -s -o /tmp/resposta.txt -w '%{http_code}' \
+            -H "apikey: $KEY" -H "Authorization: Bearer $KEY" \
+            "$URL/rest/v1/empreendimentos?select=sigla&limit=1")
+
+          echo "HTTP $codigo"
+          echo "Resposta: $(head -c 200 /tmp/resposta.txt)"
+
+          # 200 = respondeu.  401 = respondeu e exigiu login, que é o
+          # comportamento correto do RLS. Qualquer um dos dois prova que
+          # o projeto está de pé.
+          if [ "$codigo" = "200" ] || [ "$codigo" = "401" ]; then
+            echo "Projeto ativo."
+          else
+            echo "::error::Supabase não respondeu como esperado (HTTP $codigo). Verifique se o projeto foi pausado em https://supabase.com/dashboard/project/ggdggcjbnhabgwsqepnk"
+            exit 1
+          fi
