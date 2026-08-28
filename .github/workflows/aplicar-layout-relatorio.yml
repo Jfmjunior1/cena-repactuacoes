@@ -1,0 +1,41 @@
+name: Aplicar layout do relatorio
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  aplicar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Incluir ajuste de layout no painel
+        run: |
+          if ! grep -q 'relatorio-layout-fix.js' index.html; then
+            python - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+          alvo = '<script src="relatorio.js"></script>'
+          novo = alvo + '\n<script src="relatorio-layout-fix.js"></script>'
+          if alvo not in s:
+              raise SystemExit('relatorio.js nao encontrado em index.html')
+          p.write_text(s.replace(alvo, novo, 1), encoding='utf-8')
+          PY
+          fi
+      - name: Publicar alteracao
+        run: |
+          if git diff --quiet; then
+            echo 'Layout ja aplicado.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'Ativa novo layout dos relatorios'
+          git push
