@@ -60,7 +60,7 @@ const DB = (() => {
     const empresas={}, cores={};
     (emp||[]).forEach(e=>{ empresas[e.sigla]=e.nome; cores[e.sigla]=e.cor; });
 
-    const itens=[], sem=[], sim={}, acomp={};
+    const itens=[], sem=[], revisar=[], sim={}, acomp={};
     (rep||[]).forEach(r=>{
       const o = {
         id:r.id, ano:r.ano, data:r.data, sig:r.sigla, emp:empresas[r.sigla]||r.sigla,
@@ -71,9 +71,12 @@ const DB = (() => {
         status:r.status, mesCom:r.mes_com, mesRep:r.mes_rep, prazo:r.prazo,
         ini:r.inicio, fim:r.fim, ult:r.ult_repactuacao, origem:r.origem,
         locador:r.locador, admin:r.administracao, rm2src:num(r.rm2_controle),
-        plano:!!r.plano_2026, sit:r.situacao_contrato, vista:r.vista||''
+        plano:!!r.plano_2026, sit:r.situacao_contrato, vista:r.vista||'',
+        revisar:!!r.revisar, fonte:r.fonte||''
       };
-      if(r.sem_previsao) sem.push(o); else itens.push(o);
+      if(r.sem_previsao) sem.push(o);
+      else if(r.revisar) revisar.push(o);
+      else itens.push(o);
       if(r.simulacao!=null) sim[r.id]=num(r.simulacao);
       if(r.etapa||r.responsavel||r.proximo_contato)
         acomp[r.id]={ st:r.etapa||undefined, resp:r.responsavel||'', prox:r.proximo_contato||'', obs:[] };
@@ -84,17 +87,18 @@ const DB = (() => {
       acomp[a.repactuacao_id].obs.push({ id:a.id, d:a.criado_em, t:a.texto, autor:a.autor });
     });
 
-    return { itens, sem, empresas, cores, hoje: cfg.dataPosicao || hojeISO(), sim, acomp, online:true };
+    return { itens, sem, revisar, empresas, cores, hoje: cfg.dataPosicao || hojeISO(), sim, acomp, online:true };
   }
 
   function dadosLocais(){
     // A cópia local (src/dados-iniciais.js) não é versionada, para não expor dados de
     // locatários num repositório público. Se ela existir, o painel funciona sem conexão.
-    if(!window.DADOS_INICIAIS) return { vazio:true, itens:[], sem:[], empresas:{}, cores:{}, hoje:(cfg.dataPosicao||hojeISO()), sim:{}, acomp:{}, online:false };
+    if(!window.DADOS_INICIAIS) return { vazio:true, itens:[], sem:[], revisar:[], empresas:{}, cores:{}, hoje:(cfg.dataPosicao||hojeISO()), sim:{}, acomp:{}, online:false };
     const base = JSON.parse(JSON.stringify(window.DADOS_INICIAIS));
     base.sim   = lsGet('rp_sim')   || {};
     base.acomp = lsGet('rp_acomp') || {};
     base.cores = base.cores || {};
+    base.revisar = base.revisar || [];
     base.online = false;
     return base;
   }
