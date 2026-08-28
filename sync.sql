@@ -26,13 +26,12 @@ create table if not exists public.contratos (
   locador        text,
   administracao  text,
   situacao       text,
-  ativo          boolean not null default true,   -- false = sumiu da planilha
+  ativo          boolean not null default true,
   visto_em       timestamptz not null default now(),
   alterado_em    timestamptz not null default now()
 );
 create index if not exists idx_contratos_sigla on public.contratos(sigla);
 
--- ---------- 2. Registro de cada sincronização ----------
 create table if not exists public.sincronizacoes (
   id             bigint generated always as identity primary key,
   origem         text,
@@ -46,22 +45,38 @@ create table if not exists public.sincronizacoes (
   criado_em      timestamptz not null default now()
 );
 
--- ---------- 3. Segredo do fluxo ----------
 create table if not exists public.config_sync (
   chave text primary key,
   valor text not null
 );
 
--- ---------- 4. Colunas de controle nas repactuações ----------
-alter table public.repactuacoes add column if not exists fonte   text;
+alter table public.repactuacoes add column if not exists fonte text;
 alter table public.repactuacoes add column if not exists revisar boolean not null default false;
 
--- ---------- 5. Função de sincronização ----------
--- Recebe o token e um array JSON com uma entrada por contrato.
--- Campos esperados em cada item (nomes iguais aos da planilha):
---   sigla, cliente, unidade, garagem, m2, valor, rm2, inicio, fim,
---   ultima, proxima, historico, locador, administracao, situacao
--- Datas em texto ISO (AAAA-MM-DD) ou nulas.
+-- Regra conservadora: casos especiais ficam para revisão e não entram nos totais.
+create or replace function public.contrato_exige_revisao(
+  p_sigla text, p_cliente text, p_unidade text, p_valor numeric, p_situacao text
+) returns boolean
+language sql
+immutable
+as $$
+  select
+    upper(trim(coalesce(p_cliente,''))) = 'VAGO'
+    or upper(coalesce(p_cliente,'')) like 'CENA/%'
+    or upper(coalesce(p_cliente,'')) = 'CENA'
+    or upper(coalesce(p_cliente,'')) like 'DU LAC/%'
+    or upper(coalesce(p_cliente,'')) = 'DU LAC'
+    or (upper(coalesce(p_cliente,'')) like '%PETZ%' and upper(coalesce(p_sigla,'')) = 'CAIS')
+    or (upper(coalesce(p_cliente,'')) like '%FORMULA%' and upper(coalesce(p_sigla,'')) = 'TROMP')
+    or (upper(coalesce(p_cliente,'')) like '%FÓRMULA%' and upper(coalesce(p_sigla,'')) = 'TROMP')
+    or upper(coalesce(p_situacao,'')) like '%USO PRÓPRIO%'
+    or upper(coalesce(p_situacao,'')) like '%USO PROPRIO%'
+    or upper(coalesce(p_situacao,'')) like '%NÃO PERMITE RENEGOCIA%'
+    or upper(coalesce(p_situacao,'')) like '%NAO PERMITE RENEGOCIA%'
+    or upper(coalesce(p_situacao,'')) like '%DESOCUPA%'
+    or (coalesce(p_valor,0)=0 and upper(coalesce(p_cliente,''))='VAGO');
+$$;
+
 create or replace function public.sincronizar_planilha(p_token text, p_dados jsonb)
 returns jsonb
 language plpgsql
@@ -69,50 +84,23 @@ security definer
 set search_path = public
 as $$
 declare
-  v_token   text;
-  v_ids     text[] := '{}';
-  v_novos   int := 0;
-  v_alt     int := 0;
-  v_aus     int := 0;
-  v_cri     int := 0;
-  v_ajs     int := 0;
-  v_mud     jsonb := '[]'::jsonb;
-  r         jsonb;
-  v_id      text;
-  v_ant     public.contratos%rowtype;
-  ct        public.contratos%rowtype;
-  v_base    date;
-  v_data    date;
-  v_indet   boolean;
-  v_max     int;
-  v_n       int;
-  v_origem  text;
-  v_rid     text;
-  v_sinc    bigint;
+  v_token text; v_ids text[] := '{}'; v_novos int := 0; v_alt int := 0; v_aus int := 0;
+  v_cri int := 0; v_ajs int := 0; v_mud jsonb := '[]'::jsonb; r jsonb; v_id text;
+  v_ant public.contratos%rowtype; ct public.contratos%rowtype; v_base date; v_data date;
+  v_indet boolean; v_max int; v_n int; v_origem text; v_rid text; v_sinc bigint;
 begin
   select valor into v_token from public.config_sync where chave = 'token_sync';
-  if v_token is null then
-    raise exception 'token de sincronizacao nao configurado';
-  end if;
-  if p_token is distinct from v_token then
-    raise exception 'token invalido';
-  end if;
-  if jsonb_typeof(p_dados) <> 'array' then
-    raise exception 'p_dados deve ser um array JSON';
-  end if;
+  if v_token is null then raise exception 'token de sincronizacao nao configurado'; end if;
+  if p_token is distinct from v_token then raise exception 'token invalido'; end if;
+  if jsonb_typeof(p_dados) <> 'array' then raise exception 'p_dados deve ser um array JSON'; end if;
   if jsonb_array_length(p_dados) < 20 then
     raise exception 'planilha devolveu apenas % contratos - sincronizacao abortada por seguranca', jsonb_array_length(p_dados);
   end if;
 
-  -- ===== contratos =====
   for r in select * from jsonb_array_elements(p_dados) loop
-    if coalesce(trim(r->>'cliente'),'') = '' then
-      continue;
-    end if;
-
+    if coalesce(trim(r->>'cliente'),'') = '' then continue; end if;
     v_id := concat_ws('|', r->>'sigla', coalesce(r->>'unidade','-'), left(r->>'cliente', 16));
     v_ids := array_append(v_ids, v_id);
-
     select * into v_ant from public.contratos where id = v_id;
 
     insert into public.contratos as t (
@@ -149,126 +137,84 @@ begin
        or v_ant.proxima_reneg is distinct from nullif(r->>'proxima','')::date
        or v_ant.ultima_reneg is distinct from nullif(r->>'ultima','')::date then
       v_alt := v_alt + 1;
-      v_mud := v_mud || jsonb_build_object(
-        'tipo','alterado','contrato',v_id,
-        'valor_antes',v_ant.valor,'valor_depois',nullif(r->>'valor','')::numeric,
-        'fim_antes',v_ant.fim,'fim_depois',nullif(r->>'fim','')::date,
-        'proxima_antes',v_ant.proxima_reneg,'proxima_depois',nullif(r->>'proxima','')::date);
+      v_mud := v_mud || jsonb_build_object('tipo','alterado','contrato',v_id);
     end if;
   end loop;
 
-  -- contratos que sumiram da planilha: marca, nunca apaga
-  update public.contratos set ativo = false
-   where ativo = true and not (id = any(v_ids));
+  update public.contratos set ativo = false where ativo = true and not (id = any(v_ids));
   get diagnostics v_aus = row_count;
 
-  -- ===== espelha os dados de cadastro nas repactuações ainda em aberto =====
   update public.repactuacoes rp set
-    valor             = c.valor,
-    m2                = c.m2,
-    garagem           = c.garagem,
-    inicio            = c.inicio,
-    fim               = c.fim,
-    prazo             = case when c.fim is null or c.fim < current_date
-                             then 'Indet.'
-                             else lower(to_char(c.fim,'TMmon')) || '/' || to_char(c.fim,'YY') end,
-    locador           = c.locador,
-    administracao     = c.administracao,
-    rm2_controle      = c.rm2_controle,
-    situacao_contrato = c.situacao
+    valor=c.valor, m2=c.m2, garagem=c.garagem, inicio=c.inicio, fim=c.fim,
+    prazo=case when c.fim is null or c.fim < current_date then 'Indet.' else lower(to_char(c.fim,'TMmon')) || '/' || to_char(c.fim,'YY') end,
+    locador=c.locador, administracao=c.administracao, rm2_controle=c.rm2_controle, situacao_contrato=c.situacao
   from public.contratos c
-  where rp.id like c.id || '|%'
-    and rp.status is distinct from 'Concluído'
-    and rp.valor_rep is null
+  where rp.id like c.id || '|%' and rp.status is distinct from 'Concluído' and rp.valor_rep is null
     and (rp.valor is distinct from c.valor or rp.m2 is distinct from c.m2 or rp.fim is distinct from c.fim);
   get diagnostics v_ajs = row_count;
 
-  -- ===== projeta os ciclos de três anos que ainda não existem =====
   for ct in select * from public.contratos where ativo = true loop
-    if ct.proxima_reneg is not null then
-      v_base := ct.proxima_reneg;  v_origem := 'Próxima renegociação da planilha';
-    elsif ct.ultima_reneg is not null then
-      v_base := ct.ultima_reneg + interval '3 years'; v_origem := 'Última renegociação + 3 anos';
-    elsif ct.inicio is not null then
-      v_base := ct.inicio + interval '3 years'; v_origem := 'Início do contrato + 3 anos';
-    else
-      continue;
-    end if;
+    if ct.proxima_reneg is not null then v_base := ct.proxima_reneg; v_origem := 'Próxima renegociação da planilha';
+    elsif ct.ultima_reneg is not null then v_base := ct.ultima_reneg + interval '3 years'; v_origem := 'Última renegociação + 3 anos';
+    elsif ct.inicio is not null then v_base := ct.inicio + interval '3 years'; v_origem := 'Início do contrato + 3 anos';
+    else continue; end if;
 
-    while v_base <= current_date loop
-      v_base := v_base + interval '3 years';
-    end loop;
-
+    while v_base <= current_date loop v_base := v_base + interval '3 years'; end loop;
     v_indet := ct.fim is null or ct.fim < current_date;
-    v_max   := case when v_indet then 2 else 12 end;
-    v_data  := v_base;
-    v_n     := 0;
+    v_max := case when v_indet then 2 else 12 end;
+    v_data := v_base; v_n := 0;
 
     while v_n < v_max and (v_indet or v_data <= ct.fim) loop
       v_rid := ct.id || '|' || to_char(v_data,'YYYY-MM-DD');
       if not exists (select 1 from public.repactuacoes where id = v_rid) then
         insert into public.repactuacoes (
-          id, ano, data, sigla, cliente, unidade, garagem, m2, valor,
-          status, prazo, inicio, fim, ult_repactuacao, origem, locador,
-          administracao, rm2_controle, situacao_contrato, sem_previsao, fonte, vista)
+          id, ano, data, sigla, cliente, unidade, garagem, m2, valor, status, prazo,
+          inicio, fim, ult_repactuacao, origem, locador, administracao, rm2_controle,
+          situacao_contrato, sem_previsao, fonte, vista, revisar)
         values (
-          v_rid, extract(year from v_data)::int, v_data, ct.sigla, ct.cliente,
-          ct.unidade, ct.garagem, ct.m2, ct.valor, 'Previsto',
-          case when v_indet then 'Indet.'
-               else lower(to_char(ct.fim,'TMmon')) || '/' || to_char(ct.fim,'YY') end,
+          v_rid, extract(year from v_data)::int, v_data, ct.sigla, ct.cliente, ct.unidade,
+          ct.garagem, ct.m2, ct.valor, 'Previsto',
+          case when v_indet then 'Indet.' else lower(to_char(ct.fim,'TMmon')) || '/' || to_char(ct.fim,'YY') end,
           ct.inicio, ct.fim, ct.historico, v_origem, ct.locador, ct.administracao,
-          ct.rm2_controle, ct.situacao, false, 'planilha', ct.vista);
+          ct.rm2_controle, ct.situacao, false, 'planilha', ct.vista,
+          public.contrato_exige_revisao(ct.sigla,ct.cliente,ct.unidade,ct.valor,ct.situacao));
         v_cri := v_cri + 1;
         v_mud := v_mud || jsonb_build_object('tipo','ciclo_novo','contrato',ct.id,'data',v_data);
       end if;
-      v_data := v_data + interval '3 years';
-      v_n := v_n + 1;
+      v_data := v_data + interval '3 years'; v_n := v_n + 1;
     end loop;
   end loop;
 
-  -- ciclos futuros de contratos que sumiram da planilha ficam sinalizados
   update public.repactuacoes rp set revisar = true
    from public.contratos c
-  where rp.id like c.id || '|%' and c.ativo = false
-    and rp.status = 'Previsto' and rp.revisar = false;
+  where rp.id like c.id || '|' and rp.status = 'Previsto' and rp.fonte = 'planilha'
+    and public.contrato_exige_revisao(c.sigla,c.cliente,c.unidade,c.valor,c.situacao)
+    and rp.revisar = false;
 
-  insert into public.sincronizacoes (origem, recebidos, novos, alterados, ausentes,
-    ciclos_criados, ciclos_ajustados, mudancas)
+  update public.repactuacoes rp set revisar = true
+   from public.contratos c
+  where rp.id like c.id || '|' and c.ativo = false and rp.status = 'Previsto' and rp.revisar = false;
+
+  insert into public.sincronizacoes (origem, recebidos, novos, alterados, ausentes, ciclos_criados, ciclos_ajustados, mudancas)
   values ('power-automate', jsonb_array_length(p_dados), v_novos, v_alt, v_aus, v_cri, v_ajs, v_mud)
   returning id into v_sinc;
 
-  return jsonb_build_object(
-    'ok', true, 'sincronizacao', v_sinc,
-    'recebidos', jsonb_array_length(p_dados),
-    'novos', v_novos, 'alterados', v_alt, 'ausentes', v_aus,
-    'ciclos_criados', v_cri, 'ciclos_ajustados', v_ajs);
+  return jsonb_build_object('ok',true,'sincronizacao',v_sinc,'recebidos',jsonb_array_length(p_dados),
+    'novos',v_novos,'alterados',v_alt,'ausentes',v_aus,'ciclos_criados',v_cri,'ciclos_ajustados',v_ajs);
 end $$;
 
--- ---------- 6. Permissões ----------
-alter table public.contratos      enable row level security;
+alter table public.contratos enable row level security;
 alter table public.sincronizacoes enable row level security;
-alter table public.config_sync    enable row level security;
+alter table public.config_sync enable row level security;
 
 drop policy if exists contratos_leitura on public.contratos;
-create policy contratos_leitura on public.contratos
-  for select to authenticated using (true);
-
+create policy contratos_leitura on public.contratos for select to authenticated using (true);
 drop policy if exists sinc_leitura on public.sincronizacoes;
-create policy sinc_leitura on public.sincronizacoes
-  for select to authenticated using (true);
-
--- config_sync fica sem policy: ninguém lê o token pela API,
--- só a função abaixo enxerga a tabela (security definer).
+create policy sinc_leitura on public.sincronizacoes for select to authenticated using (true);
 
 revoke all on function public.sincronizar_planilha(text, jsonb) from public;
 grant execute on function public.sincronizar_planilha(text, jsonb) to anon, authenticated;
 
--- ---------- 7. Token do fluxo ----------
--- TROQUE o valor abaixo por um segredo forte e guarde-o no Power Automate.
 insert into public.config_sync (chave, valor)
 values ('token_sync', 'TROQUE-ESTE-VALOR-POR-UM-SEGREDO-FORTE')
 on conflict (chave) do nothing;
-
--- Conferência rápida depois de rodar:
---   select * from public.sincronizacoes order by criado_em desc limit 5;
---   select count(*) from public.contratos where ativo;
